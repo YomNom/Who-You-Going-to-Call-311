@@ -18,4 +18,9 @@ Promise.all([
   );
 
   choroplethMap = new ChoroplethMap({ parentElement: 'my-map' }, geojson, counts);
+
+  const methodCounts = d3.rollup(data, v => v.length, d => d.METHOD_RECEIVED);
+  const methodData = Array.from(methodCounts, ([method, count]) => ({ method, count }))
+    .sort((a, b) => b.count - a.count);
+  lollipopChart = new LollipopChart({ parentElement: 'lollipop-chart' }, methodData);
 }).catch(error => console.error(error));
