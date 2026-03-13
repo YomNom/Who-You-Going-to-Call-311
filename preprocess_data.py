@@ -2,8 +2,8 @@ import pandas as pd
 import os
 
 # Define file paths
-input_file = "Cincinnati_311_(Non-Emergency)_Service_Requests_20260309.csv"
-output_file = "cincinnati_311_2022_cleaned.csv"
+input_file = "data/Cincinnati_311_(Non-Emergency)_Service_Requests_20260309.csv"
+output_file = "data/cincinnati_311_2022_cleaned.csv"
 
 # Check if input file exists
 if not os.path.exists(input_file):
@@ -27,8 +27,6 @@ try:
     
     # 3. Clean location data (Drop rows missing key location info)
     df_clean = df_2022.dropna(subset=['NEIGHBORHOOD', 'LATITUDE', 'LONGITUDE'])
-    
-    output_file = "cincinnati_311_2022_cleaned.csv"
     
     # Save filtered and cleaned data to new CSV
     df_clean.to_csv(output_file, index=False)
