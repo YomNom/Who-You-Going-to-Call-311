@@ -1,0 +1,45 @@
+#my-map {
+  width: 100%;
+  height: 500px;
+}
+
+#tooltip {
+  position: absolute;
+  opacity: 0;
+  z-index: 9999;
+  background: #fff;
+  box-shadow: 2px 2px 3px 0px rgb(92 92 92 / 0.5);
+  border: 1px solid #ddd;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 8px;
+}
+.tooltip-label {
+  font-weight: 500;
+  font-size: 10px;
+  color: #888;
+}
+
+.legend {
+  background: white;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  line-height: 20px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+.legend i {
+  width: 16px;
+  height: 16px;
+  float: left;
+  margin-right: 6px;
+  border: 1px solid #ccc;
+}
+
+.lollipop-line {
+  stroke: #e85d04;
+  stroke-width: 2;
+}
+.lollipop-circle {
+  fill: #e85d04;
+}
