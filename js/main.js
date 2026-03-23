@@ -15,10 +15,10 @@ Promise.all([
       (d) => d.NEIGHBORHOOD.trim().toUpperCase(),
     );
 
-    choroplethMap = new ChoroplethMap(
+    leafletMap = new LeafletMap(
       { parentElement: "my-map" },
       geojson,
-      counts,
+      counts
     );
 
     const methodCounts = d3.rollup(
@@ -30,10 +30,38 @@ Promise.all([
       method,
       count,
     })).sort((a, b) => b.count - a.count);
+    
     lollipopChart = new LollipopChart(
       { parentElement: "lollipop-chart" },
-      methodData,
+      methodData
     );
+
+    const priorityOrder = ['Standard', 'Priority', 'Hazardous', 'Emergency'];
+    const priorityLabelLookup = new Map(priorityOrder.map((p) => [p.toUpperCase(), p]));
+
+    const priorityCounts = d3.rollup(
+      filtered,
+      (v) => v.length,
+      (d) => {
+        const raw = (d.PRIORITY ?? '').trim();
+        const normalized = priorityLabelLookup.get(raw.toUpperCase());
+        return normalized || raw;
+      },
+    );
+
+    // Keep expected categories in fixed order, even when count is zero.
+    const priorityData = priorityOrder.map((priority) => ({
+      priority,
+      count: priorityCounts.get(priority) ?? 0,
+    }));
+
+    const colorScale = d3.scaleOrdinal()
+        .range(['#eee1cd', '#ca9f5f', '#c77203', '#8b4300'])
+        .domain(priorityOrder);
+    barchartPriority = new barchartPriority({ 
+      parentElement: "barchart-priority" ,
+      colorScale: colorScale
+    }, priorityData);
 
     const deptCounts = d3.rollup(
       filtered,
