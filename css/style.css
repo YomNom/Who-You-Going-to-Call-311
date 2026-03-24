@@ -1,20 +1,239 @@
-#my-map {
-  width: 100%;
-  height: 500px;
+/* ─── Shared palette variables ───────────────────────────────── */
+:root {
+  --c-tan:       #eee1cd;
+  --c-sand:      #ca9f5f;
+  --c-mid:       #c77203;
+  --c-orange:    #e85d04;
+  --c-dark:      #8b4300;
+  --c-brush:     #c77203;
 }
 
+/* ─── Reset / base ───────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  font-family: sans-serif;
+  background: #f7f7f7;
+}
+
+/* ─── Root flex column fills 100vh exactly ───────────────────── */
+body {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 12px 8px;
+  gap: 8px;
+}
+
+h1 {
+  flex-shrink: 0;
+  font-size: 1.15rem;
+  margin: 0;
+  color: #222;
+}
+
+/* ─── Dashboard row: map left | attrs right ──────────────────── */
+#dashboard {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 54% 46%;
+  gap: 10px;
+}
+
+/* ── Map panel ── */
+#map-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 6px 8px;
+  min-height: 0;
+}
+
+#map-controls {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  flex-wrap: wrap;
+}
+
+#map-controls label { display: flex; align-items: center; gap: 4px; }
+
+#map-controls select {
+  font-size: 12px;
+  padding: 2px 4px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+}
+
+#map-controls button {
+  font-size: 12px;
+  padding: 2px 8px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  background: #fff;
+  cursor: pointer;
+}
+#map-controls button:hover { background: #f0f0f0; }
+
+.info-text {
+  font-size: 11px;
+  color: #888;
+  margin-left: auto;
+}
+
+/* Map fills remaining space in the panel */
+#my-map {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+}
+
+/* ── Attribute charts panel – all three visible, no scroll ── */
+#attrs-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 6px 8px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Each chart div gets an equal share of the panel height */
+#lollipop-chart,
+#barchart-priority,
+#donut-row {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Two donuts sit side by side inside the shared row */
+#donut-row {
+  display: flex;
+  flex-direction: row;
+  gap: 4px;
+  align-items: stretch;
+  justify-content: stretch;
+}
+
+#donut-chart,
+#neighborhood-chart {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#donut-chart svg,
+#neighborhood-chart svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* Lollipop and barchart scale to full container width */
+#lollipop-chart svg,
+#barchart-priority svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+/* Selection cursors */
+.bar { cursor: pointer; }
+.arc { cursor: pointer; }
+
+/* ─── Timeline panel – fixed height, always at bottom ────────── */
+#timeline-panel {
+  flex-shrink: 0;
+  height: 155px;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 4px 8px;
+  overflow: hidden;
+}
+
+/* Fill the full panel height so clientHeight is readable */
+#timeline-chart {
+  width: 100%;
+  height: 100%;
+}
+
+#timeline-chart svg { display: block; }
+
+/* ─── Tooltip ─────────────────────────────────────────────────── */
 #tooltip {
   position: absolute;
   opacity: 0;
+  z-index: 9999;
   background: #fff;
   box-shadow: 2px 2px 3px 0px rgb(92 92 92 / 0.5);
   border: 1px solid #ddd;
   font-size: 12px;
   font-weight: 600;
   padding: 2px 8px;
+  pointer-events: none;
 }
 .tooltip-label {
   font-weight: 500;
   font-size: 10px;
   color: #888;
 }
+
+/* ─── Map legend ─────────────────────────────────────────────── */
+.legend {
+  background: white;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  line-height: 20px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+.legend i {
+  width: 16px;
+  height: 16px;
+  float: left;
+  margin-right: 6px;
+  border: 1px solid #ccc;
+}
+
+/* ─── Lollipop colors – synced to tan-orange palette ─────────── */
+.lollipop-line {
+  stroke: var(--c-mid);
+  stroke-width: 2;
+}
+.lollipop-circle {
+  fill: var(--c-mid);
+  cursor: pointer;
+}
+
+/* ─── d3 brush ────────────────────────────────────────────────── */
+.brush .selection {
+  fill: var(--c-brush);
+  fill-opacity: 0.15;
+  stroke: var(--c-brush);
+  stroke-width: 1px;
+}
+.brush .handle { fill: var(--c-brush); fill-opacity: 0.5; }
+
+/* Timeline bars */
+.timeline-bar { cursor: pointer; }
+
+/* Axis labels */
+.axis-title, .axis-label { font-size: 11px; fill: #555; }
