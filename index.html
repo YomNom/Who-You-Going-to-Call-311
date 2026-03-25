@@ -9,6 +9,45 @@
 </head>
 
 <body>
+    <h1>Who are you going to call? 3-1-1!</h1>
+
+    <!-- Main two-column layout: Map left, Attributes right -->
+    <div id="dashboard">
+
+        <!-- LEFT: Map panel -->
+        <div id="map-panel">
+            <div id="map-controls">
+                <label>Color by:
+                    <select id="color-select">
+                        <option value="priority">Priority</option>
+                        <option value="response_time">Response Time</option>
+                        <option value="neighborhood">Neighborhood</option>
+                        <option value="agency">Agency</option>
+                    </select>
+                </label>
+                <button id="toggle-basemap">Toggle Basemap</button>
+                <span id="unmapped-info" class="info-text"></span>
+            </div>
+            <div id="my-map"></div>
+        </div>
+
+        <!-- RIGHT: Attribute charts -->
+        <div id="attrs-panel">
+            <div id="lollipop-chart"></div>
+            <div id="barchart-priority"></div>
+            <!-- Two donuts side by side -->
+            <div id="donut-row">
+                <div id="donut-chart"></div>
+                <div id="neighborhood-chart"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- BOTTOM: Timeline spanning full width -->
+    <div id="timeline-panel">
+        <div id="timeline-chart"></div>
+    </div>
     <div id="header">
         <h1>Cincinnati 311: Pothole Service Requests (2022)</h1>
         <div id="controls">
@@ -41,6 +80,22 @@
         <div id="donut-chart"></div>
     </div>
 
+    <!-- Dependencies first -->
+    <script src="js/d3.v6.min.js"></script>
+    <script src="js/leaflet.js"></script>
+
+    <!-- Chart classes -->
+    <script src="js/leafletMap.js"></script>
+    <script src="js/potholeMap.js"></script>
+    <script src="js/donutChart.js"></script>
+    <script src="js/barchartPriority.js"></script>
+    <script src="js/lollipopChart.js"></script>
+    <script src="js/timelineChart.js"></script>
+
+    <!-- Orchestrator last -->
+    <script src="js/main.js"></script>
+</body>
+</html>
     <div id="tooltip"></div>
 
     <script src="js/d3.v6.min.js"></script>

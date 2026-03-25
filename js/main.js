@@ -1,107 +1,122 @@
-// Load all data and initialize all visualizations
+let leafletMap, choroplethMap, lollipopChart, barchartChart, donutChart, neighborhoodDonut, timelineChart;
+let _fullPotholeData = [];
+
+// Global filter handler
+window.onDashboardFilter = function (field, value) {
+  const filtered = (field === null)
+    ? _fullPotholeData
+    : _fullPotholeData.filter(d => (d[field] ?? '').trim().toUpperCase() === value.toUpperCase());
+
+  if (leafletMap)        leafletMap.filterData(filtered);
+  if (lollipopChart)     lollipopChart.filterData(filtered);
+  if (barchartChart)     barchartChart.filterData(filtered);
+  if (donutChart)        donutChart.filterData(filtered);
+  if (neighborhoodDonut) neighborhoodDonut.filterData(filtered);
+  if (timelineChart)     timelineChart.filterData(filtered);
+};
+
+// Load all data
 Promise.all([
-  d3.csv("data/cincinnati_311_2022_cleaned.csv"),
-  d3.json("data/cincinnati.geojson"),
+  d3.csv('data/cincinnati_311_2022_cleaned.csv'),
+  d3.json('data/cincinnati.geojson')
 ])
-  .then(([data, geojson]) => {
-    console.log("Total 311 records loaded:", data.length);
+.then(([data, geojson]) => {
 
-    // --- Filter pothole data ---
-    const potholeTypes = new Set(["PTHOLE", "POTHPARK"]);
-    const filtered = data.filter((d) => potholeTypes.has(d.SR_TYPE));
-    console.log("Pothole requests:", filtered.length);
+  const potholeTypes = new Set(['PTHOLE', 'POTHPARK']);
+  const potholeData = data.filter(d => potholeTypes.has(d.SR_TYPE));
 
-    // Parse numeric/date fields
-    filtered.forEach((d) => {
-      d.LATITUDE = +d.LATITUDE;
-      d.LONGITUDE = +d.LONGITUDE;
-      d.RESPONSE_TIME_DAYS = +d.RESPONSE_TIME_DAYS;
-      d.hasCoords =
-        !isNaN(d.LATITUDE) &&
-        !isNaN(d.LONGITUDE) &&
-        d.LATITUDE !== 0 &&
-        d.LONGITUDE !== 0;
-    });
+  potholeData.forEach(d => {
+    d.LATITUDE  = +d.LATITUDE;
+    d.LONGITUDE = +d.LONGITUDE;
+    d.RESPONSE_TIME_DAYS = +d.RESPONSE_TIME_DAYS;
+    d.hasCoords = !isNaN(d.LATITUDE) && !isNaN(d.LONGITUDE)
+                  && d.LATITUDE !== 0 && d.LONGITUDE !== 0;
+  });
 
-    // --- Point map (potholeMap.js) ---
-    const { leafletMap, mappedData } = initPotholeMap(filtered);
+  _fullPotholeData = potholeData;
 
-    const counts = d3.rollup(
-      filtered,
-      (v) => v.length,
-      (d) => d.NEIGHBORHOOD.trim().toUpperCase(),
-    );
+  // --- Leaflet point map ---
+  const { leafletMap: lMap } = initPotholeMap(potholeData);
+  leafletMap = lMap;
 
-    const choroplethMap = new ChoroplethMap(
-      { parentElement: "choropleth-map" },
-      geojson,
-      counts,
-    );
+  // --- Choropleth map ---
+  const counts = d3.rollup(
+    potholeData,
+    v => v.length,
+    d => (d.NEIGHBORHOOD ?? '').trim().toUpperCase()
+  );
 
-    // --- Lollipop chart (request methods) ---
-    const methodCounts = d3.rollup(
-      data,
-      (v) => v.length,
-      (d) => d.METHOD_RECEIVED,
-    );
-    const methodData = Array.from(methodCounts, ([method, count]) => ({
-      method,
-      count,
-    })).sort((a, b) => b.count - a.count);
+  choroplethMap = new ChoroplethMap(
+    { parentElement: "choropleth-map" },
+    geojson,
+    counts
+  );
 
-    const lollipopChart = new LollipopChart(
-      { parentElement: "lollipop-chart" },
-      methodData,
-    );
+  // --- Lollipop chart ---
+  const methodCounts = d3.rollup(potholeData, v => v.length, d => d.METHOD_RECEIVED);
+  const methodData = Array.from(methodCounts, ([method, count]) => ({ method, count }))
+    .sort((a, b) => b.count - a.count);
 
-    // --- Bar chart (priority breakdown) ---
-    const priorityOrder = ["Standard", "Priority", "Hazardous", "Emergency"];
-    const priorityLabelLookup = new Map(
-      priorityOrder.map((p) => [p.toUpperCase(), p]),
-    );
+  lollipopChart = new LollipopChart(
+    { parentElement: 'lollipop-chart' },
+    methodData
+  );
 
-    const priorityCounts = d3.rollup(
-      filtered,
-      (v) => v.length,
-      (d) => {
-        const raw = (d.PRIORITY ?? "").trim();
-        const normalized = priorityLabelLookup.get(raw.toUpperCase());
-        return normalized || raw;
-      },
-    );
+  // --- Priority bar chart ---
+  const priorityOrder = ['Standard', 'Priority', 'Hazardous', 'Emergency'];
+  const priorityLookup = new Map(priorityOrder.map(p => [p.toUpperCase(), p]));
 
-    const priorityData = priorityOrder.map((priority) => ({
-      priority,
-      count: priorityCounts.get(priority) ?? 0,
-    }));
+  const priorityCounts = d3.rollup(potholeData, v => v.length, d => {
+    const raw = (d.PRIORITY ?? '').trim();
+    return priorityLookup.get(raw.toUpperCase()) || raw;
+  });
 
-    const colorScale = d3
-      .scaleOrdinal()
-      .range(["#eee1cd", "#ca9f5f", "#c77203", "#8b4300"])
-      .domain(priorityOrder);
+  const priorityData = priorityOrder.map(priority => ({
+    priority,
+    count: priorityCounts.get(priority) ?? 0
+  }));
 
-    const barChart = new barchartPriority(
-      {
-        parentElement: "barchart-priority",
-        colorScale: colorScale,
-      },
-      priorityData,
-    );
+  const colorScale = d3.scaleOrdinal()
+    .domain(priorityOrder)
+    .range(['#eee1cd', '#ca9f5f', '#c77203', '#8b4300']);
 
-    // --- Donut chart (department breakdown) ---
-    const deptCounts = d3.rollup(
-      filtered,
-      (v) => v.length,
-      (d) => d.DEPT_NAME.trim(),
-    );
-    const deptData = Array.from(deptCounts, ([department, count]) => ({
-      department,
-      count,
-    })).sort((a, b) => b.count - a.count);
+  barchartChart = new barchartPriority(
+    { parentElement: 'barchart-priority', colorScale },
+    priorityData
+  );
 
-    const donutChart = new DonutChart(
-      { parentElement: "donut-chart" },
-      deptData,
-    );
-  })
-  .catch((error) => console.error("Error loading data:", error));
+  // --- Department donut ---
+  const deptCounts = d3.rollup(potholeData, v => v.length, d => (d.DEPT_NAME ?? '').trim());
+  const deptData = Array.from(deptCounts, ([department, count]) => ({ department, count }))
+    .sort((a, b) => b.count - a.count);
+
+  donutChart = new DonutChart({
+    parentElement: 'donut-chart',
+    filterField: 'DEPT_NAME',
+    subtitle: 'Calls by Department',
+  }, deptData);
+
+  // --- Neighborhood donut ---
+  const neighCounts = d3.rollup(potholeData, v => v.length, d => (d.NEIGHBORHOOD ?? '').trim());
+  const neighData = Array.from(neighCounts, ([department, count]) => ({ department, count }))
+    .sort((a, b) => b.count - a.count);
+
+  neighborhoodDonut = new DonutChart({
+    parentElement: 'neighborhood-chart',
+    filterField: 'NEIGHBORHOOD',
+    subtitle: 'Calls by Neighborhood',
+    colorScale: leafletMap.neighborhoodScale,
+  }, neighData);
+
+  // --- Timeline chart ---
+  timelineChart = new TimelineChart(
+    { parentElement: 'timeline-chart' },
+    potholeData,
+    function (filteredRecords) {
+      window.onDashboardFilter(null, null);
+      if (leafletMap) leafletMap.filterData(filteredRecords);
+    }
+  );
+
+})
+.catch(err => console.error('Dashboard failed to load:', err));
