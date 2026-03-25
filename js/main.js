@@ -19,13 +19,25 @@ window.onDashboardFilter = function (field, value) {
   if (timelineChart)     timelineChart.filterData(filtered);
 };
 
-initPotholeMap()
-  .then(({ leafletMap: lMap, potholeData }) => {
+// Load and parse CSV here — new initPotholeMap() receives pre-parsed data
+d3.csv('data/cincinnati_311_2022_cleaned.csv').then(data => {
+  const potholeTypes = new Set(['PTHOLE', 'POTHPARK']);
+  const potholeData = data.filter(d => potholeTypes.has(d.SR_TYPE));
 
-    leafletMap = lMap;
-    _fullPotholeData = potholeData;
+  potholeData.forEach(d => {
+    d.LATITUDE  = +d.LATITUDE;
+    d.LONGITUDE = +d.LONGITUDE;
+    d.RESPONSE_TIME_DAYS = +d.RESPONSE_TIME_DAYS;
+    d.hasCoords = !isNaN(d.LATITUDE) && !isNaN(d.LONGITUDE)
+                  && d.LATITUDE !== 0 && d.LONGITUDE !== 0;
+  });
 
-    // Lollipop method received
+  const { leafletMap: lMap } = initPotholeMap(potholeData);
+
+  leafletMap = lMap;
+  _fullPotholeData = potholeData;
+
+    // Lollipop: method received
     const methodCounts = d3.rollup(potholeData, v => v.length, d => d.METHOD_RECEIVED);
     const methodData = Array.from(methodCounts, ([method, count]) => ({ method, count }))
       .sort((a, b) => b.count - a.count);
@@ -50,7 +62,7 @@ initPotholeMap()
       priorityData
     );
 
-    // Donut by department 
+    // Donut: department
     const deptCounts = d3.rollup(potholeData, v => v.length, d => (d.DEPT_NAME ?? '').trim());
     const deptData = Array.from(deptCounts, ([department, count]) => ({ department, count }))
       .sort((a, b) => b.count - a.count);
@@ -60,13 +72,12 @@ initPotholeMap()
       subtitle: 'Calls by Department',
     }, deptData);
 
-    // Donut by neighborhood (top 10)
+    // Donut: neighborhood
     // Share the same d3.schemeTableau10 scale as the map's neighborhood coloring
     // so arc colors match point colors exactly when map is set to "neighborhood"
     const neighCounts = d3.rollup(potholeData, v => v.length, d => (d.NEIGHBORHOOD ?? '').trim());
     const neighData = Array.from(neighCounts, ([department, count]) => ({ department, count }))
       .sort((a, b) => b.count - a.count)
-      .slice(0, 10);
     neighborhoodDonut = new DonutChart({
       parentElement: 'neighborhood-chart',
       filterField: 'NEIGHBORHOOD',
@@ -74,7 +85,7 @@ initPotholeMap()
       colorScale: leafletMap.neighborhoodScale,
     }, neighData);
 
-    // Timeline line chart
+    // Timeline: weekly line chart
     timelineChart = new TimelineChart(
       { parentElement: 'timeline-chart' },
       potholeData,

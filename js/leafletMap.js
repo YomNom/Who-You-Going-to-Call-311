@@ -84,7 +84,7 @@ class LeafletMap {
     const vis = this;
     switch (vis.colorBy) {
       case 'priority':
-        return vis.priorityColors[d.PRIORITY] || '#aaa';
+        return vis.priorityColors[(d.PRIORITY || '')] || '#aaa';
       case 'neighborhood':
         return vis.neighborhoodScale((d.NEIGHBORHOOD || '').trim().toUpperCase());
       case 'agency':
