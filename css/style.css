@@ -1,9 +1,172 @@
-#my-map {
-  width: 100%;
-  height: 500px;
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-#lvl-3-row {
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: #f5f5f5;
+}
+
+#header {
+  background: #2c3e50;
+  color: white;
+  padding: 12px 20px;
+}
+
+#header h1 {
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+
+#controls {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.control-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.control-group label {
+  font-size: 13px;
+}
+
+#color-select {
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  font-size: 13px;
+}
+
+#toggle-basemap {
+  padding: 4px 12px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  background: #ecf0f1;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+#toggle-basemap:hover {
+  background: #bdc3c7;
+}
+
+#unmapped-info {
+  font-size: 12px;
+  color: #bdc3c7;
+  font-style: italic;
+}
+
+#map-container {
+  position: relative;
+  width: 100%;
+}
+
+#my-map {
+  width: 100%;
+  height: calc(100vh - 80px);
+}
+
+/* Legend */
+#legend {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  background: rgba(255, 255, 255, 0.92);
+  padding: 10px 14px;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  z-index: 1000;
+  max-height: 300px;
+  overflow-y: auto;
+  font-size: 12px;
+}
+
+.legend-title {
+  font-weight: 700;
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 3px;
+}
+
+.legend-swatch {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  border: 1px solid #999;
+  flex-shrink: 0;
+}
+
+.legend-gradient {
+  margin-bottom: 2px;
+}
+
+.legend-gradient canvas {
+  border-radius: 3px;
+  display: block;
+}
+
+.legend-gradient-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #555;
+  width: 200px;
+}
+
+/* Tooltip */
+#tooltip {
+  position: absolute;
+  opacity: 0;
+  z-index: 9999;
+  background: #fff;
+  box-shadow: 2px 2px 8px rgba(0,0,0,0.2);
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 12px;
+  padding: 8px 12px;
+  pointer-events: none;
+  z-index: 100000;
+  max-width: 320px;
+}
+
+.tooltip-title {
+  font-weight: 700;
+  font-size: 13px;
+  margin-bottom: 4px;
+  color: #2c3e50;
+}
+
+.tooltip-row {
+  margin-bottom: 2px;
+  color: #555;
+}
+
+.tooltip-row strong {
+  color: #333;
+}
+
+.tooltip-label {
+  font-weight: 500;
+  font-size: 10px;
+  color: #888;
+}
+
+/* Charts row */
+#charts-row {
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -16,23 +179,7 @@
   align-self: center;
 }
 
-#tooltip {
-  position: absolute;
-  opacity: 0;
-  z-index: 9999;
-  background: #fff;
-  box-shadow: 2px 2px 3px 0px rgb(92 92 92 / 0.5);
-  border: 1px solid #ddd;
-  font-size: 12px;
-  font-weight: 600;
-  padding: 2px 8px;
-}
-.tooltip-label {
-  font-weight: 500;
-  font-size: 10px;
-  color: #888;
-}
-
+/* Choropleth legend */
 .legend {
   background: white;
   padding: 6px 10px;
@@ -41,6 +188,7 @@
   line-height: 20px;
   box-shadow: 0 1px 4px rgba(0,0,0,0.3);
 }
+
 .legend i {
   width: 16px;
   height: 16px;
@@ -49,10 +197,12 @@
   border: 1px solid #ccc;
 }
 
+/* Lollipop chart */
 .lollipop-line {
   stroke: #e85d04;
   stroke-width: 2;
 }
+
 .lollipop-circle {
   fill: #e85d04;
 }
