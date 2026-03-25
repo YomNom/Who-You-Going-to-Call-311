@@ -10,8 +10,8 @@ class barchartPriority {
     this.config = {
       parentElement: _config.parentElement,
       colorScale: _config.colorScale,
-      containerWidth: _config.containerWidth || 320,
-      containerHeight: _config.containerHeight || 220,
+      containerWidth: _config.containerWidth || 260,
+      containerHeight: _config.containerHeight || 400,
       margin: _config.margin || {top: 25, right: 20, bottom: 20, left: 40},
     }
     this.data = _data;

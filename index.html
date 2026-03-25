@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-    <title>Cincinnati 311 – Pothole Dashboard</title>
+    <title>Cincinnati 311 Pothole Requests - Interactive Map</title>
     <link rel="icon" href="data:;base64,iVBORwOKGO=" />
     <link rel="stylesheet" href="css/leaflet.css">
     <link rel="stylesheet" href="css/style.css">
 </head>
+
 <body>
     <h1>Who are you going to call? 3-1-1!</h1>
 
@@ -46,8 +48,37 @@
     <div id="timeline-panel">
         <div id="timeline-chart"></div>
     </div>
+    <div id="header">
+        <h1>Cincinnati 311: Pothole Service Requests (2022)</h1>
+        <div id="controls">
+            <div class="control-group">
+                <label for="color-select">Color by:</label>
+                <select id="color-select">
+                    <option value="priority">Priority</option>
+                    <option value="responseTime">Response Time (days)</option>
+                    <option value="neighborhood">Neighborhood</option>
+                    <option value="agency">Public Agency</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <button id="toggle-basemap">Toggle Basemap</button>
+            </div>
+            <div class="control-group" id="unmapped-info"></div>
+        </div>
+    </div>
 
-    <div id="tooltip"></div>
+    <div id="map-container">
+        <div id="my-map"></div>
+        <div id="legend"></div>
+    </div>
+
+    <div id="choropleth-map"></div>
+
+    <div id="charts-row">
+        <div id="lollipop-chart"></div>
+        <div id="barchart-priority"></div>
+        <div id="donut-chart"></div>
+    </div>
 
     <!-- Dependencies first -->
     <script src="js/d3.v6.min.js"></script>
@@ -64,4 +95,18 @@
     <!-- Orchestrator last -->
     <script src="js/main.js"></script>
 </body>
+</html>
+    <div id="tooltip"></div>
+
+    <script src="js/d3.v6.min.js"></script>
+    <script src="js/leaflet.js"></script>
+    <script src="js/leafletMap.js"></script>
+    <script src="js/choroplethMap.js"></script>
+    <script src="js/lollipopChart.js"></script>
+    <script src="js/barchartPriority.js"></script>
+    <script src="js/donutChart.js"></script>
+    <script src="js/potholeMap.js"></script>
+    <script src="js/main.js"></script>
+</body>
+
 </html>
