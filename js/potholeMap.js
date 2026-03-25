@@ -1,56 +1,37 @@
 /**
- * Loads Cincinnati 311 pothole data and initializes the LeafletMap.
- * Returns a Promise that resolves with { leafletMap, potholeData, mappedData }.
+ * Initializes the pothole point map from pre-loaded data.
+ * @param {Array} potholeData - filtered pothole records (already parsed)
+ * @returns {{ leafletMap: LeafletMap, mappedData: Array }}
  */
-function initPotholeMap() {
-  return d3.csv('data/cincinnati_311_2022_cleaned.csv')
-    .then(data => {
-      // Filter for pothole service requests only
-      const potholeData = data.filter(d =>
-        d.SR_TYPE === 'PTHOLE' || d.SR_TYPE === 'POTHPARK'
-      );
+function initPotholeMap(potholeData) {
+  // Separate mapped vs unmapped
+  const mappedData = potholeData.filter(d => d.hasCoords);
+  const unmappedCount = potholeData.length - mappedData.length;
 
-      console.log('Total 311 records loaded:', data.length);
-      console.log('Pothole records:', potholeData.length);
+  // Show unmapped count
+  const unmappedInfo = document.getElementById('unmapped-info');
+  if (unmappedCount > 0) {
+    unmappedInfo.textContent = `${unmappedCount} of ${potholeData.length} calls not mapped (missing coordinates)`;
+  } else {
+    unmappedInfo.textContent = `All ${potholeData.length} calls mapped`;
+  }
 
-      // Parse numeric and date fields
-      potholeData.forEach(d => {
-        d.LATITUDE = +d.LATITUDE;
-        d.LONGITUDE = +d.LONGITUDE;
-        d.RESPONSE_TIME_DAYS = +d.RESPONSE_TIME_DAYS;
-        d.hasCoords = !isNaN(d.LATITUDE) && !isNaN(d.LONGITUDE)
-                      && d.LATITUDE !== 0 && d.LONGITUDE !== 0;
-      });
+  // Initialize the map
+  const leafletMap = new LeafletMap(
+    { parentElement: '#my-map' },
+    mappedData,
+    potholeData
+  );
 
-      // Separate mapped vs unmapped
-      const mappedData = potholeData.filter(d => d.hasCoords);
-      const unmappedCount = potholeData.length - mappedData.length;
+  // Color-by dropdown handler
+  d3.select('#color-select').on('change', function () {
+    leafletMap.setColorBy(this.value);
+  });
 
-      // Show unmapped count
-      const unmappedInfo = document.getElementById('unmapped-info');
-      if (unmappedCount > 0) {
-        unmappedInfo.textContent = `${unmappedCount} of ${potholeData.length} calls not mapped (missing coordinates)`;
-      } else {
-        unmappedInfo.textContent = `All ${potholeData.length} calls mapped`;
-      }
+  // Basemap toggle handler
+  d3.select('#toggle-basemap').on('click', function () {
+    leafletMap.toggleBasemap();
+  });
 
-      // Initialize the map
-      const leafletMap = new LeafletMap(
-        { parentElement: '#my-map' },
-        mappedData,
-        potholeData
-      );
-
-      // Color-by dropdown handler
-      d3.select('#color-select').on('change', function () {
-        leafletMap.setColorBy(this.value);
-      });
-
-      // Basemap toggle handler
-      d3.select('#toggle-basemap').on('click', function () {
-        leafletMap.toggleBasemap();
-      });
-
-      return { leafletMap, potholeData, mappedData };
-    });
+  return { leafletMap, mappedData };
 }

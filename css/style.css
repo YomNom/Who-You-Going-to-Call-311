@@ -158,3 +158,51 @@ body {
 .tooltip-row strong {
   color: #333;
 }
+
+.tooltip-label {
+  font-weight: 500;
+  font-size: 10px;
+  color: #888;
+}
+
+/* Charts row */
+#charts-row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 20px;
+  margin: 20px;
+}
+
+#barchart-priority,
+#donut-chart {
+  align-self: center;
+}
+
+/* Choropleth legend */
+.legend {
+  background: white;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  line-height: 20px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+
+.legend i {
+  width: 16px;
+  height: 16px;
+  float: left;
+  margin-right: 6px;
+  border: 1px solid #ccc;
+}
+
+/* Lollipop chart */
+.lollipop-line {
+  stroke: #e85d04;
+  stroke-width: 2;
+}
+
+.lollipop-circle {
+  fill: #e85d04;
+}
