@@ -8,21 +8,18 @@ class LollipopChart {
   initVis() {
     const vis = this;
 
-    vis.margin = { top: 14, right: 20, bottom: 44, left: 140 };
+    vis.margin = { top: 20, right: 30, bottom: 60, left: 160 };
 
     const container = document.getElementById(vis.config.parentElement);
     const totalWidth = container.clientWidth || 800;
 
     vis.width = totalWidth - vis.margin.left - vis.margin.right;
-    vis.height = (vis.config.containerHeight || 230) - vis.margin.top - vis.margin.bottom;
+    vis.height = 450 - vis.margin.top - vis.margin.bottom;
 
-    const svgH = vis.height + vis.margin.top + vis.margin.bottom;
     vis.svg = d3.select(`#${vis.config.parentElement}`)
       .append('svg')
       .attr('width', totalWidth)
-      .attr('height', svgH)
-      .attr('viewBox', `0 0 ${totalWidth} ${svgH}`)
-      .attr('preserveAspectRatio', 'xMinYMin meet')
+      .attr('height', vis.height + vis.margin.top + vis.margin.bottom)
       .append('g')
       .attr('transform', `translate(${vis.margin.left},${vis.margin.top})`);
 
@@ -88,42 +85,9 @@ class LollipopChart {
       })
       .on('mouseout', () => {
         vis.tooltip.style('opacity', 0);
-      })
-      // Linking click to filter by method received
-      .on('click', function(event, d) {
-        const isSelected = d3.select(this).classed('selected');
-        vis.svg.selectAll('.lollipop-circle')
-          .classed('selected', false)
-          .attr('opacity', 1);
-        vis.svg.selectAll('.lollipop-line').attr('opacity', 1);
-        if (!isSelected) {
-          d3.select(this).classed('selected', true);
-          vis.svg.selectAll('.lollipop-circle:not(.selected)').attr('opacity', 0.2);
-          vis.svg.selectAll('.lollipop-line').filter(ld => ld.method !== d.method).attr('opacity', 0.2);
-          if (window.onDashboardFilter) window.onDashboardFilter('METHOD_RECEIVED', d.method);
-        } else {
-          if (window.onDashboardFilter) window.onDashboardFilter(null, null);
-        }
       });
 
     vis.xAxisG.call(d3.axisBottom(vis.xScale).tickFormat(d3.format(',')));
     vis.yAxisG.call(d3.axisLeft(vis.yScale));
-  }
-
-  // Linking re-aggregated data from raw records based on priority field
-  filterData(rawRecords) {
-    const vis = this;
-    const methodCounts = d3.rollup(
-      rawRecords,
-      v => v.length,
-      d => d.METHOD_RECEIVED
-    );
-    vis.data = Array.from(methodCounts, ([method, count]) => ({ method, count }))
-      .sort((a, b) => b.count - a.count);
-
-    // Clear selection state
-    vis.svg.selectAll('.lollipop-circle').classed('selected', false).attr('opacity', 1);
-    vis.svg.selectAll('.lollipop-line').attr('opacity', 1);
-    vis.updateVis();
   }
 }

@@ -24,14 +24,9 @@ class barchartPriority {
   initVis() {
     let vis = this;
 
-    // Read container width so the chart fills its panel column
-    const container = document.getElementById(vis.config.parentElement);
-    const containerW = (container ? container.clientWidth : null) || vis.config.containerWidth;
-    const containerH = vis.config.containerHeight;
-
     // Calculate inner chart size. Margin specifies the space around the actual chart.
-    vis.width  = containerW - vis.config.margin.left - vis.config.margin.right;
-    vis.height = containerH - vis.config.margin.top  - vis.config.margin.bottom;
+    vis.width = vis.config.containerWidth - vis.config.margin.left - vis.config.margin.right;
+    vis.height = vis.config.containerHeight - vis.config.margin.top - vis.config.margin.bottom;
 
     // Initialize scales and axes
     
@@ -58,10 +53,8 @@ class barchartPriority {
     // Define size of SVG drawing area
     vis.svg = d3.select(`#${vis.config.parentElement}`)
       .append('svg')
-      .attr('width',  containerW)
-      .attr('height', containerH)
-      .attr('viewBox', `0 0 ${containerW} ${containerH}`)
-      .attr('preserveAspectRatio', 'xMinYMin meet');
+      .attr('width', vis.config.containerWidth)
+      .attr('height', vis.config.containerHeight);
 
     // SVG Group containing the actual chart; D3 margin convention
     vis.chart = vis.svg.append('g')
@@ -129,49 +122,10 @@ class barchartPriority {
         .attr('width', vis.xScale.bandwidth())
         .attr('height', d => vis.height - vis.yScale(vis.yValue(d)))
         .attr('y', d => vis.yScale(vis.yValue(d)))
-        .attr('fill', d => vis.colorScale(vis.colorValue(d)))
-        // Linking click to filter by priority
-        .on('click', function(event, d) {
-          const isSelected = d3.select(this).classed('selected');
-          vis.chart.selectAll('.bar')
-            .classed('selected', false)
-            .attr('opacity', 1);
-          if (!isSelected) {
-            d3.select(this).classed('selected', true);
-            vis.chart.selectAll('.bar:not(.selected)').attr('opacity', 0.25);
-            if (window.onDashboardFilter) window.onDashboardFilter('PRIORITY', d.key);
-          } else {
-            if (window.onDashboardFilter) window.onDashboardFilter(null, null);
-          }
-        });
+        .attr('fill', d => vis.colorScale(vis.colorValue(d)));
 
     // Update axes
     vis.xAxisG.call(vis.xAxis);
     vis.yAxisG.call(vis.yAxis);
-  }
-
-  // Linking re-aggregated data from raw records based on priority field
-  filterData(rawRecords) {
-    const vis = this;
-    const priorityOrder = ['Standard', 'Priority', 'Hazardous', 'Emergency'];
-    const priorityLabelLookup = new Map(priorityOrder.map(p => [p.toUpperCase(), p]));
-
-    const priorityCounts = d3.rollup(
-      rawRecords,
-      v => v.length,
-      d => {
-        const raw = (d.PRIORITY ?? '').trim();
-        return priorityLabelLookup.get(raw.toUpperCase()) || raw;
-      }
-    );
-
-    vis.data = priorityOrder.map(priority => ({
-      priority,
-      count: priorityCounts.get(priority) ?? 0,
-    }));
-
-    // Clear selection state
-    vis.chart.selectAll('.bar').classed('selected', false).attr('opacity', 1);
-    vis.updateVis();
   }
 }
