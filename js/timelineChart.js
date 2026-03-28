@@ -81,7 +81,7 @@ class TimelineChart {
       .style('font-size', '12px')
       .style('font-weight', '600')
       .style('fill', '#333')
-      .text('Pothole Requests by Day (2022) — drag to filter');
+      .text('Pothole Requests by Day (2022) - drag to filter');
 
     vis.chart = vis.svg.append('g')
       .attr('transform', `translate(${vis.margin.left},${vis.margin.top})`);
@@ -120,6 +120,7 @@ class TimelineChart {
     // Brush on top of everything
     vis.brush = d3.brushX()
       .extent([[0, 0], [vis.width, vis.height]])
+      .on('brush', vis._brushLive.bind(vis))
       .on('end', vis._brushed.bind(vis));
     vis.brushG = vis.chart.append('g').attr('class', 'brush');
 
@@ -264,7 +265,24 @@ class TimelineChart {
     vis.dimOverlayR && vis.dimOverlayR.attr('opacity', 0);
   }
 
-  // Brush handler
+  // Live brush handler — updates charts while dragging/moving
+  _brushLive(event) {
+    const vis = this;
+    if (vis._suppressBrush || !event.selection) return;
+
+    const [x0, x1] = event.selection;
+    vis._applyDim(x0, x1);
+
+    const startDate = vis.xScale.invert(x0);
+    const endDate   = vis.xScale.invert(x1);
+
+    const filtered = vis.fullData.filter(
+      d => d._parsedDate && d._parsedDate >= startDate && d._parsedDate <= endDate
+    );
+    if (vis.onBrush) vis.onBrush(filtered);
+  }
+
+  // Brush end handler
   _brushed(event) {
     const vis = this;
     if (vis._suppressBrush) return;

@@ -39,6 +39,16 @@ Promise.all([
   const { leafletMap: lMap } = initPotholeMap(potholeData);
   leafletMap = lMap;
 
+  // Wire up map brush to update all other charts
+  leafletMap.onBrushSelection = function (selectedRecords) {
+    const records = selectedRecords || _fullPotholeData;
+    if (lollipopChart)     lollipopChart.filterData(records);
+    if (barchartChart)     barchartChart.filterData(records);
+    if (donutChart)        donutChart.filterData(records);
+    if (neighborhoodDonut) neighborhoodDonut.filterData(records);
+    if (timelineChart)     timelineChart.filterData(records);
+  };
+
   // --- Choropleth map ---
   const counts = d3.rollup(
     potholeData,
@@ -113,8 +123,11 @@ Promise.all([
     { parentElement: 'timeline-chart' },
     potholeData,
     function (filteredRecords) {
-      window.onDashboardFilter(null, null);
-      if (leafletMap) leafletMap.filterData(filteredRecords);
+      if (leafletMap)        leafletMap.filterData(filteredRecords);
+      if (lollipopChart)     lollipopChart.filterData(filteredRecords);
+      if (barchartChart)     barchartChart.filterData(filteredRecords);
+      if (donutChart)        donutChart.filterData(filteredRecords);
+      if (neighborhoodDonut) neighborhoodDonut.filterData(filteredRecords);
     }
   );
 
