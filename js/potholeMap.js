@@ -33,6 +33,15 @@ function initPotholeMap(potholeData) {
     leafletMap.toggleBasemap();
   });
 
+  // Heatmap toggle handler
+  d3.select('#toggle-heatmap').on('click', function () {
+    const isHeatmap = leafletMap._viewMode === 'heatmap';
+    leafletMap.setViewMode(isHeatmap ? 'points' : 'heatmap');
+    d3.select(this).text(isHeatmap ? 'Show Heatmap' : 'Show Points');
+    d3.select(this).classed('active', !isHeatmap);
+    d3.select('#color-select').property('disabled', !isHeatmap);
+  });
+
   // Brush toggle handler
   const brushBtn = document.getElementById('brush-toggle');
   if (brushBtn) {
