@@ -41,11 +41,11 @@ class LeafletMap {
       maxZoom: 17,
       max: 1.0,
       gradient: {
-        0.0: '#eee1cd',
-        0.3: '#ca9f5f',
-        0.6: '#c77203',
-        0.8: '#e85d04',
-        1.0: '#8b4300'
+        0.0: 'rgba(49,104,142,0)',
+        0.3: '#31688e',
+        0.5: '#35b779',
+        0.8: '#8fd744',
+        1.0: '#fde725'
       }
     });
 
@@ -223,7 +223,7 @@ class LeafletMap {
       const div = L.DomUtil.create('div', 'legend');
       div.innerHTML = '<strong>Call Density</strong><br>';
       div.innerHTML +=
-        '<div class="gradient-bar" style="background:linear-gradient(to right,#eee1cd,#ca9f5f,#c77203,#e85d04,#8b4300);"></div>';
+        '<div class="gradient-bar" style="background:linear-gradient(to right,#31688e,#35b779,#8fd744,#fde725);"></div>';
       div.innerHTML +=
         '<div style="display:flex;justify-content:space-between;font-size:10px;margin-top:2px;">' +
         '<span>Low</span><span>High</span></div>';
