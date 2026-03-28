@@ -88,6 +88,12 @@ h1 {
   background: #f0f0f0;
 }
 
+#brush-toggle.active {
+  background: var(--c-mid);
+  color: #fff;
+  border-color: var(--c-dark);
+}
+
 .info-text {
   font-size: 11px;
   color: #888;
@@ -97,7 +103,12 @@ h1 {
 /* Map container */
 #my-map {
   width: 100%;
-  height: 100%;
+  flex: 2;
+  min-height: 0;
+}
+
+#choropleth-map {
+  width: 100%;
   flex: 1;
   min-height: 0;
 }

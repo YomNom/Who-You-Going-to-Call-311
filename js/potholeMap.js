@@ -33,5 +33,35 @@ function initPotholeMap(potholeData) {
     leafletMap.toggleBasemap();
   });
 
+  // Brush toggle handler
+  const brushBtn = document.getElementById('brush-toggle');
+  if (brushBtn) {
+    brushBtn.addEventListener('click', function () {
+      if (leafletMap.brushActive) {
+        leafletMap.disableBrush();
+        brushBtn.classList.remove('active');
+      } else {
+        leafletMap.enableBrush();
+        brushBtn.classList.add('active');
+      }
+    });
+  }
+
+  // Reset all handler
+  const resetBtn = document.getElementById('reset-all');
+  if (resetBtn) {
+    resetBtn.addEventListener('click', function () {
+      // Turn off brush if active
+      if (leafletMap.brushActive) {
+        leafletMap.disableBrush();
+        brushBtn.classList.remove('active');
+      } else if (leafletMap._brushRect) {
+        leafletMap.clearBrushSelection();
+      }
+      // Reset all views to full data
+      window.onDashboardFilter(null, null);
+    });
+  }
+
   return { leafletMap, mappedData };
 }

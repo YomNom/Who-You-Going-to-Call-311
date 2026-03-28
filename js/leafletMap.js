@@ -33,20 +33,28 @@ class LeafletMap {
     vis.tooltip = d3.select('#tooltip');
     vis.markersLayer = L.layerGroup().addTo(vis.map);
 
+    // --- Brush state ---
+    vis.brushActive = false;
+    vis._brushRect = null;
+    vis._brushStart = null;
+    vis.onBrushSelection = null; // callback set externally
+
     // --- Color scales ---
     vis.priorityColors = {
-      'Standard':  '#eee1cd',
-      'Priority':  '#ca9f5f',
-      'Hazardous': '#c77203',
-      'Emergency': '#8b4300',
+      'STANDARD':  '#4a90d9',
+      'PRIORITY':  '#f5c542',
+      'HAZARDOUS': '#e85d04',
+      'EMERGENCY': '#d62828',
     };
 
     vis.neighborhoodScale = d3.scaleOrdinal(d3.schemeTableau10);
     vis.agencyScale = d3.scaleOrdinal(d3.schemeSet2);
 
-    const maxDays = d3.max(vis.mappedData, d => d.RESPONSE_TIME_DAYS) || 30;
-    vis.responseTimeScale = d3.scaleSequential(d3.interpolateBlues)
-      .domain([0, maxDays]);
+    vis.responseTimeBreaks = [7, 30, 90, 180, 365];
+    vis.responseTimeColors = ['#2b9e3e', '#a8d94a', '#fee839', '#f57d20', '#d62828', '#7b0d1e'];
+    vis.responseTimeScale = d3.scaleThreshold()
+      .domain(vis.responseTimeBreaks)
+      .range(vis.responseTimeColors);
 
     // Fit bounds
     if (vis.mappedData.length > 0) {
@@ -67,7 +75,7 @@ class LeafletMap {
 
     switch (vis.colorBy) {
       case 'priority':
-        return vis.priorityColors[d.PRIORITY] || '#aaa';
+        return vis.priorityColors[(d.PRIORITY || '').toUpperCase()] || '#aaa';
 
       case 'neighborhood':
         return vis.neighborhoodScale((d.NEIGHBORHOOD || '').trim());
@@ -86,6 +94,7 @@ class LeafletMap {
   renderPoints(data) {
     const vis = this;
     vis.markersLayer.clearLayers();
+    vis._markers = [];
 
     data.forEach(d => {
       if (!d.hasCoords) return;
@@ -98,7 +107,10 @@ class LeafletMap {
         fillOpacity: 0.82,
       });
 
+      circle._data = d;
+
       circle.on('mouseover', e => {
+        if (vis._brushing) return;
         vis.tooltip
           .style('opacity', 1)
           .style('left', e.originalEvent.pageX + 10 + 'px')
@@ -116,6 +128,22 @@ class LeafletMap {
       circle.on('mouseout', () => vis.tooltip.style('opacity', 0));
 
       vis.markersLayer.addLayer(circle);
+      vis._markers.push(circle);
+    });
+  }
+
+  _styleMarkersByBounds(bounds) {
+    const vis = this;
+    if (!vis._markers) return;
+
+    vis._markers.forEach(marker => {
+      const d = marker._data;
+      const inside = !bounds || bounds.contains(marker.getLatLng());
+      marker.setStyle({
+        fillColor: inside ? vis.getColor(d) : '#ccc',
+        fillOpacity: inside ? 0.82 : 0.3,
+        color: inside ? '#fff' : '#ddd',
+      });
     });
   }
 
@@ -138,6 +166,217 @@ class LeafletMap {
     vis.renderPoints(vis._currentMapped);
   }
 
+  // --- Brush interaction (supports draw, drag, resize) ---
+
+  _brushRectStyle() {
+    return {
+      color: '#c77203',
+      weight: 2,
+      fillColor: '#c77203',
+      fillOpacity: 0.15,
+      interactive: false,
+    };
+  }
+
+  // Determine what part of the brush the mouse is over
+  _brushHitTest(e) {
+    const vis = this;
+    if (!vis._brushRect) return 'draw';
+
+    const bounds = vis._brushRect.getBounds();
+    const nw = vis.map.latLngToContainerPoint(bounds.getNorthWest());
+    const se = vis.map.latLngToContainerPoint(bounds.getSouthEast());
+    const pt = L.point(e.offsetX, e.offsetY);
+    const edge = 8; // px threshold for edge detection
+
+    const insideX = pt.x >= nw.x - edge && pt.x <= se.x + edge;
+    const insideY = pt.y >= nw.y - edge && pt.y <= se.y + edge;
+    if (!insideX || !insideY) return 'draw';
+
+    const nearLeft   = Math.abs(pt.x - nw.x) < edge;
+    const nearRight  = Math.abs(pt.x - se.x) < edge;
+    const nearTop    = Math.abs(pt.y - nw.y) < edge;
+    const nearBottom = Math.abs(pt.y - se.y) < edge;
+
+    if (nearTop && nearLeft)     return 'nw-resize';
+    if (nearTop && nearRight)    return 'ne-resize';
+    if (nearBottom && nearLeft)  return 'sw-resize';
+    if (nearBottom && nearRight) return 'se-resize';
+    if (nearLeft)   return 'w-resize';
+    if (nearRight)  return 'e-resize';
+    if (nearTop)    return 'n-resize';
+    if (nearBottom) return 's-resize';
+
+    return 'move';
+  }
+
+  _setMarkersInteractive(enabled) {
+    const val = enabled ? '' : 'none';
+    this.markersLayer.eachLayer(layer => {
+      layer.getElement && layer.getElement() && (layer.getElement().style.pointerEvents = val);
+    });
+  }
+
+  _applyBrushFilter() {
+    const vis = this;
+    if (!vis._brushRect) return;
+    const bounds = vis._brushRect.getBounds();
+    vis._styleMarkersByBounds(bounds);
+    const selected = vis._currentMapped.filter(d =>
+      d.hasCoords && bounds.contains(L.latLng(d.LATITUDE, d.LONGITUDE))
+    );
+    if (vis.onBrushSelection) vis.onBrushSelection(selected);
+  }
+
+  enableBrush() {
+    const vis = this;
+    vis.brushActive = true;
+    vis.map.dragging.disable();
+    vis.map.getContainer().style.cursor = 'crosshair';
+
+    const container = vis.map.getContainer();
+
+    vis._onBrushDown = function (e) {
+      if (e.button !== 0) return;
+      e.preventDefault();
+      e.stopPropagation();
+
+      vis._setMarkersInteractive(false);
+      vis.tooltip.style('opacity', 0);
+
+      const mode = vis._brushHitTest(e);
+      vis._brushMode = mode;
+      vis._brushing = true;
+      vis._dragStartPt = L.point(e.offsetX, e.offsetY);
+
+      if (mode === 'draw') {
+        if (vis._brushRect) { vis._brushRect.remove(); vis._brushRect = null; }
+        vis._brushStart = vis.map.mouseEventToLatLng(e);
+      } else if (mode === 'move') {
+        vis._dragStartBounds = vis._brushRect.getBounds();
+      } else {
+        // resize: anchor the opposite corner
+        const b = vis._brushRect.getBounds();
+        const anchors = {
+          'nw-resize': b.getSouthEast(), 'ne-resize': b.getSouthWest(),
+          'sw-resize': b.getNorthEast(), 'se-resize': b.getNorthWest(),
+          'n-resize': b.getSouthWest(),  's-resize': b.getNorthWest(),
+          'w-resize': b.getSouthEast(),  'e-resize': b.getSouthWest(),
+        };
+        vis._resizeAnchor = anchors[mode];
+        vis._resizeOrigBounds = b;
+      }
+    };
+
+    vis._onBrushMove = function (e) {
+      if (!vis._brushing) {
+        // Update cursor based on hover zone
+        const mode = vis._brushHitTest(e);
+        if (mode === 'move') container.style.cursor = 'grab';
+        else if (mode === 'draw') container.style.cursor = 'crosshair';
+        else container.style.cursor = mode;
+        return;
+      }
+
+      const mode = vis._brushMode;
+
+      if (mode === 'draw') {
+        const current = vis.map.mouseEventToLatLng(e);
+        const bounds = L.latLngBounds(vis._brushStart, current);
+        if (vis._brushRect) vis._brushRect.setBounds(bounds);
+        else vis._brushRect = L.rectangle(bounds, vis._brushRectStyle()).addTo(vis.map);
+
+      } else if (mode === 'move') {
+        const curPt = L.point(e.offsetX, e.offsetY);
+        const dx = curPt.x - vis._dragStartPt.x;
+        const dy = curPt.y - vis._dragStartPt.y;
+        const origNW = vis.map.latLngToContainerPoint(vis._dragStartBounds.getNorthWest());
+        const origSE = vis.map.latLngToContainerPoint(vis._dragStartBounds.getSouthEast());
+        const newNW = vis.map.containerPointToLatLng(L.point(origNW.x + dx, origNW.y + dy));
+        const newSE = vis.map.containerPointToLatLng(L.point(origSE.x + dx, origSE.y + dy));
+        vis._brushRect.setBounds(L.latLngBounds(newNW, newSE));
+
+      } else {
+        // Resize
+        const current = vis.map.mouseEventToLatLng(e);
+        const anchor = vis._resizeAnchor;
+        const orig = vis._resizeOrigBounds;
+        let sw, ne;
+
+        if (mode === 'n-resize' || mode === 's-resize') {
+          // Only change latitude, keep original longitude
+          const latBounds = [anchor.lat, current.lat].sort((a, b) => a - b);
+          sw = L.latLng(latBounds[0], orig.getWest());
+          ne = L.latLng(latBounds[1], orig.getEast());
+        } else if (mode === 'w-resize' || mode === 'e-resize') {
+          // Only change longitude, keep original latitude
+          const lngBounds = [anchor.lng, current.lng].sort((a, b) => a - b);
+          sw = L.latLng(orig.getSouth(), lngBounds[0]);
+          ne = L.latLng(orig.getNorth(), lngBounds[1]);
+        } else {
+          // Corner resize: free in both axes
+          const bounds = L.latLngBounds(anchor, current);
+          sw = bounds.getSouthWest();
+          ne = bounds.getNorthEast();
+        }
+
+        vis._brushRect.setBounds(L.latLngBounds(sw, ne));
+      }
+
+      vis._applyBrushFilter();
+    };
+
+    vis._onBrushUp = function (e) {
+      if (!vis._brushing) return;
+      vis._brushing = false;
+      vis._setMarkersInteractive(true);
+
+      if (!vis._brushRect) return;
+
+      const bounds = vis._brushRect.getBounds();
+      const nw = vis.map.latLngToContainerPoint(bounds.getNorthWest());
+      const se = vis.map.latLngToContainerPoint(bounds.getSouthEast());
+      if (nw.distanceTo(se) < 5) {
+        vis.clearBrushSelection();
+        return;
+      }
+
+      vis._applyBrushFilter();
+    };
+
+    container.addEventListener('mousedown', vis._onBrushDown);
+    container.addEventListener('mousemove', vis._onBrushMove);
+    container.addEventListener('mouseup', vis._onBrushUp);
+  }
+
+  disableBrush() {
+    const vis = this;
+    vis.brushActive = false;
+    vis.map.dragging.enable();
+    vis.map.getContainer().style.cursor = '';
+
+    const container = vis.map.getContainer();
+    if (vis._onBrushDown) container.removeEventListener('mousedown', vis._onBrushDown);
+    if (vis._onBrushMove) container.removeEventListener('mousemove', vis._onBrushMove);
+    if (vis._onBrushUp) container.removeEventListener('mouseup', vis._onBrushUp);
+
+    vis.clearBrushSelection();
+  }
+
+  clearBrushSelection() {
+    const vis = this;
+    if (vis._brushRect) {
+      vis._brushRect.remove();
+      vis._brushRect = null;
+    }
+    vis._brushStart = null;
+    vis._brushing = false;
+    vis._styleMarkersByBounds(null);
+    if (vis.onBrushSelection) {
+      vis.onBrushSelection(null);
+    }
+  }
+
   addLegend() {
     const vis = this;
 
@@ -151,14 +390,19 @@ class LeafletMap {
       if (vis.colorBy === 'priority') {
         div.innerHTML = '<strong>Priority</strong><br>';
         Object.entries(vis.priorityColors).forEach(([k, v]) => {
-          div.innerHTML += `<i style="background:${v}"></i>${k}<br>`;
+          const label = k.charAt(0) + k.slice(1).toLowerCase();
+          div.innerHTML += `<i style="background:${v}"></i>${label}<br>`;
         });
 
       } else if (vis.colorBy === 'response_time') {
         div.innerHTML = '<strong>Response Time</strong><br>';
-        [0, 10, 20, 30].forEach(v => {
-          div.innerHTML += `<i style="background:${vis.responseTimeScale(v)}"></i>${v}d<br>`;
-        });
+        const breaks = vis.responseTimeBreaks;
+        const colors = vis.responseTimeColors;
+        div.innerHTML += `<i style="background:${colors[0]}"></i>&lt; ${breaks[0]}d<br>`;
+        for (let i = 1; i < breaks.length; i++) {
+          div.innerHTML += `<i style="background:${colors[i]}"></i>${breaks[i - 1]} - ${breaks[i]}d<br>`;
+        }
+        div.innerHTML += `<i style="background:${colors[colors.length - 1]}"></i>&gt; ${breaks[breaks.length - 1]}d<br>`;
 
       } else {
         div.innerHTML = `<strong>${vis.colorBy}</strong><br><em>(categorical)</em>`;
