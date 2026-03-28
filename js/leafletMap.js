@@ -37,8 +37,8 @@ class LeafletMap {
     vis.priorityColors = {
       'Standard':  '#eee1cd',
       'Priority':  '#ca9f5f',
-      'Hazardous': '#c77203',
-      'Emergency': '#8b4300',
+      'Hazardous': '#ca7b13',
+      'Emergency': '#be0404',
     };
 
     vis.neighborhoodScale = d3.scaleOrdinal(d3.schemeTableau10);

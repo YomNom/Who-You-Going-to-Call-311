@@ -154,8 +154,8 @@ function renderDashboard(selectedData, geojson) {
     }
   );
 
-})
-.catch(err => console.error('Dashboard failed to load:', err));
+}));
+// .catch(err => console.error('Dashboard failed to load:', err));
 
 // dataCategory is an array of SR_TYPE
 function getData(originalData, dataCategory) {
