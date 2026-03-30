@@ -7,6 +7,7 @@ class LeafletMap {
     this.colorBy = 'priority';
     this.basemapIdx = 0;
     this._currentMapped = mappedData;
+    this._viewMode = 'points'; // 'points' | 'heatmap'
 
     this.initVis();
   }
@@ -32,6 +33,21 @@ class LeafletMap {
 
     vis.tooltip = d3.select('#tooltip');
     vis.markersLayer = L.layerGroup().addTo(vis.map);
+
+    // --- Heatmap layer (not added to map yet) ---
+    vis.heatLayer = L.heatLayer([], {
+      radius: 20,
+      blur: 15,
+      maxZoom: 17,
+      max: 1.0,
+      gradient: {
+        0.0: 'rgba(49,104,142,0)',
+        0.3: '#31688e',
+        0.5: '#35b779',
+        0.8: '#8fd744',
+        1.0: '#fde725'
+      }
+    });
 
     // --- Brush state ---
     vis.brushActive = false;
@@ -149,8 +165,10 @@ class LeafletMap {
 
   setColorBy(value) {
     this.colorBy = value;
-    this.renderPoints(this._currentMapped);
-    this.addLegend();
+    if (this._viewMode === 'points') {
+      this.renderPoints(this._currentMapped);
+      this.addLegend();
+    }
   }
 
   toggleBasemap() {
@@ -163,7 +181,55 @@ class LeafletMap {
   filterData(rawRecords) {
     const vis = this;
     vis._currentMapped = rawRecords.filter(d => d.hasCoords);
-    vis.renderPoints(vis._currentMapped);
+    if (vis._viewMode === 'heatmap') {
+      vis.renderHeatmap(vis._currentMapped);
+    } else {
+      vis.renderPoints(vis._currentMapped);
+    }
+  }
+
+  renderHeatmap(data) {
+    const heatData = data
+      .filter(d => d.hasCoords)
+      .map(d => [d.LATITUDE, d.LONGITUDE, 1]);
+    this.heatLayer.setLatLngs(heatData);
+  }
+
+  setViewMode(mode) {
+    const vis = this;
+    vis._viewMode = mode;
+
+    if (mode === 'heatmap') {
+      vis.map.removeLayer(vis.markersLayer);
+      vis.heatLayer.addTo(vis.map);
+      vis.renderHeatmap(vis._currentMapped);
+      if (vis._legend) vis._legend.remove();
+      vis.addHeatmapLegend();
+    } else {
+      vis.map.removeLayer(vis.heatLayer);
+      vis.markersLayer.addTo(vis.map);
+      vis.renderPoints(vis._currentMapped);
+      if (vis._heatLegend) vis._heatLegend.remove();
+      vis.addLegend();
+    }
+  }
+
+  addHeatmapLegend() {
+    const vis = this;
+    if (vis._heatLegend) vis._heatLegend.remove();
+
+    vis._heatLegend = L.control({ position: 'bottomright' });
+    vis._heatLegend.onAdd = () => {
+      const div = L.DomUtil.create('div', 'legend');
+      div.innerHTML = '<strong>Call Density</strong><br>';
+      div.innerHTML +=
+        '<div class="gradient-bar" style="background:linear-gradient(to right,#31688e,#35b779,#8fd744,#fde725);"></div>';
+      div.innerHTML +=
+        '<div style="display:flex;justify-content:space-between;font-size:10px;margin-top:2px;">' +
+        '<span>Low</span><span>High</span></div>';
+      return div;
+    };
+    vis._heatLegend.addTo(vis.map);
   }
 
   // --- Brush interaction (supports draw, drag, resize) ---
@@ -221,7 +287,9 @@ class LeafletMap {
     const vis = this;
     if (!vis._brushRect) return;
     const bounds = vis._brushRect.getBounds();
-    vis._styleMarkersByBounds(bounds);
+    if (vis._viewMode === 'points') {
+      vis._styleMarkersByBounds(bounds);
+    }
     const selected = vis._currentMapped.filter(d =>
       d.hasCoords && bounds.contains(L.latLng(d.LATITUDE, d.LONGITUDE))
     );
@@ -371,7 +439,9 @@ class LeafletMap {
     }
     vis._brushStart = null;
     vis._brushing = false;
-    vis._styleMarkersByBounds(null);
+    if (vis._viewMode === 'points') {
+      vis._styleMarkersByBounds(null);
+    }
     if (vis.onBrushSelection) {
       vis.onBrushSelection(null);
     }
