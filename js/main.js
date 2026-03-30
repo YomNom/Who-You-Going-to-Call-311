@@ -3,9 +3,26 @@ let leafletMap,
   lollipopChart,
   barchartChart,
   donutChart,
-  neighborhoodDonut,
   timelineChart;
 let _fullPotholeData = [];
+
+function updateKPIs(records) {
+  const total = records.length;
+  const withResponse = records.filter(
+    (d) => !isNaN(d.RESPONSE_TIME_DAYS) && d.RESPONSE_TIME_DAYS >= 0,
+  );
+  const avgResponse =
+    withResponse.length > 0
+      ? d3.mean(withResponse, (d) => d.RESPONSE_TIME_DAYS).toFixed(1)
+      : "—";
+  const neighborhoods = new Set(
+    records.map((d) => (d.NEIGHBORHOOD ?? "").trim()).filter((n) => n),
+  ).size;
+
+  document.getElementById("kpi-total").textContent = total.toLocaleString();
+  document.getElementById("kpi-avg-response").textContent = avgResponse;
+  document.getElementById("kpi-neighborhoods").textContent = neighborhoods;
+}
 
 // Global filter handler
 window.onDashboardFilter = function (field, value) {
@@ -16,12 +33,12 @@ window.onDashboardFilter = function (field, value) {
           (d) => (d[field] ?? "").trim().toUpperCase() === value.toUpperCase(),
         );
 
+  updateKPIs(filtered);
   if (leafletMap) leafletMap.filterData(filtered);
   if (choroplethMap) choroplethMap.filterData(filtered);
   if (lollipopChart) lollipopChart.filterData(filtered);
   if (barchartChart) barchartChart.filterData(filtered);
   if (donutChart) donutChart.filterData(filtered);
-  if (neighborhoodDonut) neighborhoodDonut.filterData(filtered);
   if (timelineChart) timelineChart.filterData(filtered);
 };
 
@@ -47,6 +64,7 @@ Promise.all([
     });
 
     _fullPotholeData = potholeData;
+    updateKPIs(potholeData);
 
     // --- Leaflet point map ---
     const { leafletMap: lMap } = initPotholeMap(potholeData);
@@ -55,11 +73,11 @@ Promise.all([
     // Wire up map brush to update all other charts
     leafletMap.onBrushSelection = function (selectedRecords) {
       const records = selectedRecords || _fullPotholeData;
+      updateKPIs(records);
       if (choroplethMap) choroplethMap.filterData(records);
       if (lollipopChart) lollipopChart.filterData(records);
       if (barchartChart) barchartChart.filterData(records);
       if (donutChart) donutChart.filterData(records);
-      if (neighborhoodDonut) neighborhoodDonut.filterData(records);
       if (timelineChart) timelineChart.filterData(records);
     };
 
@@ -142,37 +160,17 @@ Promise.all([
       deptData,
     );
 
-    // --- Neighborhood donut ---
-    const neighCounts = d3.rollup(
-      potholeData,
-      (v) => v.length,
-      (d) => (d.NEIGHBORHOOD ?? "").trim(),
-    );
-    const neighData = Array.from(neighCounts, ([department, count]) => ({
-      department,
-      count,
-    })).sort((a, b) => b.count - a.count);
-
-    neighborhoodDonut = new DonutChart(
-      {
-        parentElement: "neighborhood-chart",
-        filterField: "NEIGHBORHOOD",
-        subtitle: "Calls by Neighborhood",
-        colorScale: leafletMap.neighborhoodScale,
-      },
-      neighData,
-    );
-
     // --- Timeline chart ---
     timelineChart = new TimelineChart(
       { parentElement: "timeline-chart" },
       potholeData,
       function (filteredRecords) {
+        updateKPIs(filteredRecords);
         if (leafletMap) leafletMap.filterData(filteredRecords);
+        if (choroplethMap) choroplethMap.filterData(filteredRecords);
         if (lollipopChart) lollipopChart.filterData(filteredRecords);
         if (barchartChart) barchartChart.filterData(filteredRecords);
         if (donutChart) donutChart.filterData(filteredRecords);
-        if (neighborhoodDonut) neighborhoodDonut.filterData(filteredRecords);
       },
     );
   })

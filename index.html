@@ -9,47 +9,70 @@
 </head>
 
 <body>
-    <h1>Who are you going to call? 3-1-1!</h1>
-
-    <!-- Main two-column layout: Map left, Attributes right -->
-    <div id="dashboard">
-
-        <!-- LEFT: Map panel -->
-        <div id="map-panel">
-            <div id="map-controls">
-                <label>Color by:
-                    <select id="color-select">
-                        <option value="priority">Priority</option>
-                        <option value="response_time">Response Time</option>
-                        <option value="neighborhood">Neighborhood</option>
-                        <option value="agency">Agency</option>
-                    </select>
-                </label>
-                <button id="toggle-basemap">Toggle Basemap</button>
-                <button id="brush-toggle">Brush Select</button>
-                <button id="reset-all">Reset All</button>
-                <span id="unmapped-info" class="info-text"></span>
+    <header id="site-header">
+        <div id="header-left">
+            <h1>Who You Going to Call? 3-1-1</h1>
+            <p id="header-subtitle">Cincinnati Pothole Requests &middot; 2022</p>
+        </div>
+        <div id="kpi-strip">
+            <div class="kpi-card">
+                <span class="kpi-value" id="kpi-total">—</span>
+                <span class="kpi-label">Total Requests</span>
             </div>
+            <div class="kpi-card">
+                <span class="kpi-value" id="kpi-avg-response">—</span>
+                <span class="kpi-label">Avg Response Days</span>
+            </div>
+            <div class="kpi-card">
+                <span class="kpi-value" id="kpi-neighborhoods">—</span>
+                <span class="kpi-label">Neighborhoods</span>
+            </div>
+        </div>
+        <div id="header-controls">
+            <label>Color by:
+                <select id="color-select">
+                    <option value="priority">Priority</option>
+                    <option value="response_time">Response Time</option>
+                    <option value="neighborhood">Neighborhood</option>
+                    <option value="agency">Agency</option>
+                </select>
+            </label>
+            <button id="toggle-basemap">Toggle Basemap</button>
+            <button id="brush-toggle">Brush Select</button>
+            <button id="reset-all">Reset All</button>
+            <span id="unmapped-info" class="info-text"></span>
+        </div>
+    </header>
+
+    <div id="maps-row">
+        <div class="card" id="point-map-card">
+            <div class="card-label">Find potholes near you</div>
             <div id="my-map"></div>
+        </div>
+        <div class="card" id="choropleth-card">
+            <div class="card-label">Hottest neighborhoods</div>
             <div id="choropleth-map"></div>
         </div>
-
-        <!-- RIGHT: Attribute charts -->
-        <div id="attrs-panel">
-            <div id="lollipop-chart"></div>
-            <div id="barchart-priority"></div>
-            <!-- Two donuts side by side -->
-            <div id="donut-row">
-                <div id="donut-chart"></div>
-                <div id="neighborhood-chart"></div>
-            </div>
-        </div>
-
     </div>
 
-    <!-- BOTTOM: Timeline spanning full width -->
-    <div id="timeline-panel">
+    <div class="card" id="timeline-panel">
+        <div class="card-label">2022 in review &mdash; brush to filter by date</div>
         <div id="timeline-chart"></div>
+    </div>
+
+    <div id="bottom-row">
+        <div class="card">
+            <div class="card-label">How were they reported?</div>
+            <div id="lollipop-chart"></div>
+        </div>
+        <div class="card">
+            <div class="card-label">How urgent?</div>
+            <div id="barchart-priority"></div>
+        </div>
+        <div class="card">
+            <div class="card-label">Which department?</div>
+            <div id="donut-chart"></div>
+        </div>
     </div>
 
     <div id="tooltip"></div>
