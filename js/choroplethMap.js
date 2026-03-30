@@ -88,7 +88,9 @@ class ChoroplethMap {
               vis.geoLayer.eachLayer((l) => {
                 if (l !== e.target) l.setStyle({ fillOpacity: 0.2 });
               });
+              vis._selfTriggered = true;
               if (window.onDashboardFilter) window.onDashboardFilter("NEIGHBORHOOD", name?.trim());
+              vis._selfTriggered = false;
             }
           },
         });
@@ -102,6 +104,9 @@ class ChoroplethMap {
 
   filterData(rawRecords) {
     const vis = this;
+    if (!vis._selfTriggered) {
+      vis._selectedNeighborhood = null;
+    }
     vis.counts = d3.rollup(
       rawRecords,
       (v) => v.length,

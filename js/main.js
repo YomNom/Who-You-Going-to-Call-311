@@ -55,6 +55,7 @@ Promise.all([
     // Wire up map brush to update all other charts
     leafletMap.onBrushSelection = function (selectedRecords) {
       const records = selectedRecords || _fullPotholeData;
+      if (choroplethMap) choroplethMap.filterData(records);
       if (lollipopChart) lollipopChart.filterData(records);
       if (barchartChart) barchartChart.filterData(records);
       if (donutChart) donutChart.filterData(records);
