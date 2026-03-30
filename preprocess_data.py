@@ -1,27 +1,50 @@
-import importlib
-import sys
+# pip install pandas
+import pandas as pd
+import os
 
 
-def main() -> None:
-    """
-    Delegate to the canonical preprocessing script in data/preprocess_data.py.
+# Define file paths
+input_file = "./data/Cincinnati_311_(Non-Emergency)_Service_Requests_20260329.csv"
+output_file = "./data/cincinnati_311_2022_cleaned.csv"
 
-    This wrapper exists to avoid duplicating preprocessing logic at the project
-    root while preserving the existing entry point:
+# Check if input file exists
+if not os.path.exists(input_file):
+    print(f"Error: {input_file} not found in the current directory.")
+    exit(1)
 
-        python preprocess_data.py
-    """
-    try:
-        # Importing the module will execute its top-level script logic, if any.
-        importlib.import_module("data.preprocess_data")
-    except ImportError as exc:
-        print(
-            "Error: Could not import the canonical preprocessing script "
-            "'data/preprocess_data.py'.\n"
-            f"Details: {exc}"
-        )
-        sys.exit(1)
-
-
-if __name__ == "__main__":
-    main()
+try:
+    # Read the CSV file
+    print(f"Reading {input_file}...")
+    df = pd.read_csv(input_file)
+    
+    print(f"Total records in original file: {len(df)}")
+    
+    # 1. Filter for 2022 data only as per project requirements
+    df['DATE_CREATED'] = pd.to_datetime(df['DATE_CREATED'], errors='coerce')
+    df_2022 = df[df['DATE_CREATED'].dt.year == 2022].copy()
+    
+    # 2. Calculate response time (in days) from DATE_CLOSED - DATE_CREATED
+    df_2022['DATE_CLOSED'] = pd.to_datetime(df_2022['DATE_CLOSED'], errors='coerce')
+    df_2022['RESPONSE_TIME_DAYS'] = (df_2022['DATE_CLOSED'] - df_2022['DATE_CREATED']).dt.days
+    
+    # 3. Clean location data (Drop rows missing key location info)
+    df_clean = df_2022.dropna(subset=['NEIGHBORHOOD', 'LATITUDE', 'LONGITUDE'])
+    
+    # Save filtered and cleaned data to new CSV
+    df_clean.to_csv(output_file, index=False)
+    print(f"\nFiltered 2022 data saved to {output_file}")
+    
+    # Display summary statistics for log purpose
+    print("\n--- Summary ---")
+    print(f"Original records: {len(df)}")
+    print(f"Records from 2022: {len(df_2022)}")
+    print(f"Records with complete location data: {len(df_clean)}")
+    print(f"Percentage of usable records: {(len(df_clean)/len(df)*100):.2f}%")
+    
+    # Show sample of filtered data
+    print("\n--- Sample of cleaned data ---")
+    print(df_clean[['SR_NUMBER', 'SR_TYPE', 'DATE_CREATED', 'DATE_CLOSED', 'RESPONSE_TIME_DAYS', 'NEIGHBORHOOD', 'LATITUDE', 'LONGITUDE']].head())
+    
+except Exception as e:
+    print(f"Error processing file: {str(e)}")
+    exit(1)
