@@ -63,8 +63,8 @@ class DonutChart {
       .style("fill", "#333");
 
     vis.colorScale = vis.config.colorScale || d3.scaleOrdinal()
-      .range(['#eee1cd', '#ca9f5f', '#c77203', '#e85d04', '#8b4300',
-              '#f4a261', '#d4a373', '#a3785d', '#7a5230', '#4a2d14']);
+      .range(['#f4c87a','#e8a84a','#c77203','#e85d04','#bf5500',
+              '#a3785d','#8b4300','#d4a373','#7a5230','#4a2d14']);
 
     vis.pie = d3.pie().value((d) => d.count).sort(null);
     vis.arc = d3.arc().innerRadius(vis.innerRadius).outerRadius(vis.radius);

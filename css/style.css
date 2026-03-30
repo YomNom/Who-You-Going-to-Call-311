@@ -189,7 +189,7 @@ body {
   height: 195px;
   flex-shrink: 0;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: 1fr 1fr 1fr 1.4fr;
   gap: 8px;
 }
 
@@ -289,6 +289,33 @@ body {
   height: 12px;
   border: 1px solid #ccc;
   border-radius: 2px;
+}
+
+/* ─── Word Cloud ───────────────────────────────────────────── */
+#word-cloud-chart {
+  flex: 1;
+  min-height: 0;
+}
+
+#word-cloud-chart svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.cloud-word {
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.cloud-word.wc-selected {
+  font-weight: 700;
+}
+
+.wc-empty {
+  fill: #999;
+  font-size: 12px;
+  font-style: italic;
 }
 
 /* ─── Chart Styling ────────────────────────────────────────── */

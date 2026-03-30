@@ -3,8 +3,10 @@ let leafletMap,
   lollipopChart,
   barchartChart,
   donutChart,
-  timelineChart;
+  timelineChart,
+  wordCloudChart;
 let _fullPotholeData = [];
+let _fullBulkyData = [];
 
 function updateKPIs(records) {
   const total = records.length;
@@ -40,6 +42,9 @@ window.onDashboardFilter = function (field, value) {
   if (barchartChart) barchartChart.filterData(filtered);
   if (donutChart) donutChart.filterData(filtered);
   if (timelineChart) timelineChart.filterData(filtered);
+  // On full reset (field === null), reset word cloud to show all bulky data
+  if (field === null && wordCloudChart)
+    wordCloudChart.filterData(_fullPotholeData);
 };
 
 // Load all data
@@ -65,6 +70,33 @@ Promise.all([
 
     _fullPotholeData = potholeData;
     updateKPIs(potholeData);
+
+    // --- Bulky item data (separate from potholes, same CSV) ---
+    const bulkyData = data.filter((d) => {
+      const hasItem = [
+        "BULKY_ITEM_1",
+        "BULKY_ITEM_2",
+        "BULKY_ITEM_3",
+        "BULKY_ITEM_4",
+        "BULKY_ITEM_5",
+      ].some((f) => (d[f] || "").trim());
+      return (
+        hasItem || +d.NUM_TIRES > 0 || +d.NUM_FREONS > 0 || +d.NUM_SOFABEDS > 0
+      );
+    });
+    bulkyData.forEach((d) => {
+      d.LATITUDE = +d.LATITUDE;
+      d.LONGITUDE = +d.LONGITUDE;
+      d.NUM_TIRES = +d.NUM_TIRES || 0;
+      d.NUM_FREONS = +d.NUM_FREONS || 0;
+      d.NUM_SOFABEDS = +d.NUM_SOFABEDS || 0;
+      d.hasCoords =
+        !isNaN(d.LATITUDE) &&
+        !isNaN(d.LONGITUDE) &&
+        d.LATITUDE !== 0 &&
+        d.LONGITUDE !== 0;
+    });
+    _fullBulkyData = bulkyData;
 
     // --- Leaflet point map ---
     const { leafletMap: lMap } = initPotholeMap(potholeData);
@@ -133,7 +165,7 @@ Promise.all([
     const colorScale = d3
       .scaleOrdinal()
       .domain(priorityOrder)
-      .range(["#eee1cd", "#ca9f5f", "#c77203", "#8b4300"]);
+      .range(["#ca9f5f", "#c77203", "#e85d04", "#8b4300"]);
 
     barchartChart = new barchartPriority(
       { parentElement: "barchart-priority", colorScale },
@@ -160,6 +192,37 @@ Promise.all([
       deptData,
     );
 
+    // --- Word cloud (bulky item trash profile) ---
+    wordCloudChart = new WordCloud(
+      { parentElement: "word-cloud-chart" },
+      _fullBulkyData,
+      potholeData.length,
+    );
+
+    wordCloudChart.onWordClick = function (term) {
+      const fields = [
+        "BULKY_ITEM_1",
+        "BULKY_ITEM_2",
+        "BULKY_ITEM_3",
+        "BULKY_ITEM_4",
+        "BULKY_ITEM_5",
+      ];
+      const synth = {
+        TIRES: (d) => d.NUM_TIRES > 0,
+        "FREON/AC UNIT": (d) => d.NUM_FREONS > 0,
+        "SOFA BED": (d) => d.NUM_SOFABEDS > 0,
+      };
+      if (term === null) {
+        leafletMap.filterData(_fullBulkyData);
+      } else {
+        const fn =
+          synth[term] ||
+          ((d) =>
+            fields.some((f) => (d[f] || "").trim().toUpperCase() === term));
+        leafletMap.filterData(_fullBulkyData.filter(fn));
+      }
+    };
+
     // --- Timeline chart ---
     timelineChart = new TimelineChart(
       { parentElement: "timeline-chart" },
@@ -171,6 +234,7 @@ Promise.all([
         if (lollipopChart) lollipopChart.filterData(filteredRecords);
         if (barchartChart) barchartChart.filterData(filteredRecords);
         if (donutChart) donutChart.filterData(filteredRecords);
+        if (wordCloudChart) wordCloudChart.filterData(filteredRecords);
       },
     );
   })
