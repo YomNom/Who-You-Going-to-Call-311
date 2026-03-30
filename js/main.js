@@ -1,7 +1,5 @@
 let leafletMap, choroplethMap, lollipopChart, barchartChart, donutChart, neighborhoodDonut, timelineChart;
 let _displayedData = [];
-let _rawData = [];
-let _geojson = null;
 
 // Global filter handler
 window.onDashboardFilter = function (field, value) {
@@ -24,17 +22,14 @@ Promise.all([
 ])
 .then(([data, geojson]) => {
 
-  _rawData = data;
-  _geojson = geojson;
-
   // Makes sure pothole data is selected by default
   d3.select('#data-select').property('value', 'PTHOLE');
 
   // Set up data select handler
   const dataSelect = d3.select('#data-select');
-  dataSelect.on('change', () => renderGraphs(_geojson));
+  dataSelect.on('change', () => renderGraphs(data, geojson));
 
-  renderGraphs(geojson);
+  renderGraphs(data, geojson);
 })
 .catch(err => console.error('Dashboard failed to load:', err));
 
@@ -66,10 +61,10 @@ function getSelectedTypes() {
   }
 }
 
-function renderGraphs(geojson) {
+function renderGraphs(rawData, geojson) {
   clearWindow();
   const selectedTypes = getSelectedTypes();
-  _displayedData = getData(getData(_rawData, selectedTypes), selectedTypes);
+  _displayedData = getData(getData(rawData, selectedTypes), selectedTypes);
 
    // --- Leaflet point map ---
   const { leafletMap: lMap } = initPotholeMap(_displayedData);
