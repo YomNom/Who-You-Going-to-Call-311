@@ -15,7 +15,13 @@ class WordCloud {
 
     const container = document.getElementById(vis.config.parentElement);
     vis._w = container ? Math.max(container.clientWidth,  200) : 400;
-    vis._h = container ? Math.max(container.clientHeight, 140) : 160;
+    vis._h = container ? Math.max(container.clientHeight, 130) : 160;
+
+    // HTML overlay for empty / error states — more reliable than SVG text
+    vis.emptyMsg = d3
+      .select(`#${vis.config.parentElement}`)
+      .append("p")
+      .attr("class", "wc-empty-msg");
 
     vis.svg = d3
       .select(`#${vis.config.parentElement}`)
@@ -30,22 +36,23 @@ class WordCloud {
       .append("g")
       .attr("transform", `translate(${vis._w / 2},${vis._h / 2})`);
 
-    // Empty-state message (hidden by default)
-    vis.emptyMsg = vis.svg
-      .append("text")
-      .attr("class", "wc-empty")
-      .attr("x", vis._w / 2)
-      .attr("y", vis._h / 2)
-      .attr("text-anchor", "middle")
-      .attr("dominant-baseline", "middle")
-      .attr("visibility", "hidden")
-      .text("No bulky items found for this selection.");
-
     vis.colorScale = d3.scaleOrdinal(d3.schemeTableau10);
 
     vis.tooltip = d3.select("#tooltip");
 
     vis.updateVis();
+  }
+
+  _showEmpty(msg) {
+    const vis = this;
+    vis.emptyMsg.text(msg).style("display", "block");
+    vis.svg.style("display", "none");
+  }
+
+  _hideEmpty() {
+    const vis = this;
+    vis.emptyMsg.style("display", "none");
+    vis.svg.style("display", "block");
   }
 
   _aggregateItems(records) {
@@ -56,9 +63,9 @@ class WordCloud {
         const item = (d[`BULKY_ITEM_${i}`] || "").trim().toUpperCase();
         if (item) counts.set(item, (counts.get(item) || 0) + 1);
       }
-      if (d.NUM_TIRES > 0)    counts.set("TIRES",        (counts.get("TIRES")        || 0) + d.NUM_TIRES);
-      if (d.NUM_FREONS > 0)   counts.set("FREON/AC UNIT",(counts.get("FREON/AC UNIT")|| 0) + d.NUM_FREONS);
-      if (d.NUM_SOFABEDS > 0) counts.set("SOFA BED",     (counts.get("SOFA BED")     || 0) + d.NUM_SOFABEDS);
+      if (d.NUM_TIRES    > 0) counts.set("TIRES",         (counts.get("TIRES")         || 0) + d.NUM_TIRES);
+      if (d.NUM_FREONS   > 0) counts.set("FREON/AC UNIT", (counts.get("FREON/AC UNIT") || 0) + d.NUM_FREONS);
+      if (d.NUM_SOFABEDS > 0) counts.set("SOFA BED",      (counts.get("SOFA BED")      || 0) + d.NUM_SOFABEDS);
     });
 
     return Array.from(counts, ([text, value]) => ({ text, value }))
@@ -73,10 +80,16 @@ class WordCloud {
 
     if (total === 0) {
       vis.wordsG.selectAll("text.cloud-word").remove();
-      vis.emptyMsg.attr("visibility", "visible");
+      vis._showEmpty("No bulky items found for this selection.");
       return;
     }
-    vis.emptyMsg.attr("visibility", "hidden");
+
+    if (typeof d3.layout === "undefined" || typeof d3.layout.cloud !== "function") {
+      vis._showEmpty("Word cloud library unavailable.");
+      return;
+    }
+
+    vis._hideEmpty();
 
     const [minVal, maxVal] = d3.extent(items, d => d.value);
     const fontScale = d3.scaleSqrt()
@@ -85,7 +98,6 @@ class WordCloud {
 
     vis.colorScale.domain(items.map(d => d.text));
 
-    // Reentrance guard
     const gen = ++vis._layoutGen;
 
     d3.layout.cloud()
@@ -96,7 +108,11 @@ class WordCloud {
       .font("Segoe UI")
       .fontSize(d => d.size)
       .on("end", words => {
-        if (gen !== vis._layoutGen) return; // stale layout, discard
+        if (gen !== vis._layoutGen) return;
+        if (words.length === 0) {
+          vis._showEmpty("No bulky items found for this selection.");
+          return;
+        }
         vis._drawWords(words);
       })
       .start();
@@ -118,10 +134,11 @@ class WordCloud {
           .style("fill",        d => vis.colorScale(d.text))
           .style("cursor", "pointer")
           .attr("transform",    d => `translate(${d.x},${d.y}) rotate(${d.rotate})`)
-          .style("opacity", 0)
-          .call(s => s.transition().duration(400).style("opacity", 1))
+          .text(d => d.text)
+          .style("opacity", 1)
           .call(s => vis._attachHandlers(s)),
         update => update
+          .text(d => d.text)
           .call(s => s.transition().duration(400)
             .attr("transform", d => `translate(${d.x},${d.y}) rotate(${d.rotate})`)
             .style("font-size", d => d.size + "px")
@@ -157,7 +174,6 @@ class WordCloud {
         const wasSelected = vis._selectedWord === d.text;
         const prevSelected = vis._selectedWord;
 
-        // Reset all words
         vis.wordsG.selectAll("text.cloud-word")
           .classed("wc-selected", false)
           .style("opacity", 1);
@@ -171,7 +187,6 @@ class WordCloud {
             .style("opacity", 0.2);
         }
 
-        // Fire callback only when state actually changed
         if (vis._selectedWord !== null || prevSelected !== null) {
           if (vis.onWordClick) vis.onWordClick(vis._selectedWord);
         }
@@ -196,7 +211,6 @@ class WordCloud {
       });
     }
 
-    // Clear word selection without firing a spurious map reset
     if (vis._selectedWord !== null) {
       vis._selectedWord = null;
       vis.wordsG.selectAll("text.cloud-word")
