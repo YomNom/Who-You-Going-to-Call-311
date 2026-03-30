@@ -17,6 +17,7 @@ window.onDashboardFilter = function (field, value) {
         );
 
   if (leafletMap) leafletMap.filterData(filtered);
+  if (choroplethMap) choroplethMap.filterData(filtered);
   if (lollipopChart) lollipopChart.filterData(filtered);
   if (barchartChart) barchartChart.filterData(filtered);
   if (donutChart) donutChart.filterData(filtered);
