@@ -22,12 +22,29 @@ Promise.all([
 ])
 .then(([data, geojson]) => {
 
-  // Makes sure pothole data is selected by default
-  d3.select('#data-select').property('value', 'PTHOLE');
+  // Make sure all data options are selected by default.
+  const checkboxes = Array.from(document.querySelectorAll('input[name="data-select"]'));
+  checkboxes.forEach(cb => cb.checked = true);
 
-  // Set up data select handler
-  const dataSelect = d3.select('#data-select');
-  dataSelect.on('change', () => renderGraphs(data, geojson));
+  // Re-render when any data checkbox changes
+  checkboxes.forEach(cb => cb.addEventListener('change', () => renderGraphs(data, geojson)));
+
+  const selectAllButton = document.querySelector('#select-all-data');
+  const clearSelectionButton = document.querySelector('#clear-data-selection');
+
+  if (selectAllButton) {
+    selectAllButton.addEventListener('click', () => {
+      checkboxes.forEach(cb => cb.checked = true);
+      renderGraphs(data, geojson);
+    });
+  }
+
+  if (clearSelectionButton) {
+    clearSelectionButton.addEventListener('click', () => {
+      checkboxes.forEach(cb => cb.checked = false);
+      renderGraphs(data, geojson);
+    });
+  }
 
   renderGraphs(data, geojson);
 })
@@ -50,15 +67,17 @@ function getData(originalData, dataCategory) {
 
 // for handling special case where multiple SR_TYPE apply to an incident
 function getSelectedTypes() {
-  const selected = d3.select('#data-select').property('value');
-  // Only types with multiple SR_TYPE values need special handling
-  if (selected === 'PTHOLE') {
-    return ['PTHOLE', 'POTHPARK'];
-  } else if (!selected) {
-    return ['PTHOLE', 'POTHPARK'];
-  } else {
-      return [selected];
+  const selected = Array.from(document.querySelectorAll('input[name="data-select"]:checked'))
+    .map(cb => cb.value);
+
+  if (!selected.length) {
+    return [];
   }
+
+  // PTHOLE maps to two SR_TYPE values.
+  if (selected.includes('PTHOLE')) selected.push('POTHPARK');
+
+  return Array.from(new Set(selected));
 }
 
 function renderGraphs(rawData, geojson) {

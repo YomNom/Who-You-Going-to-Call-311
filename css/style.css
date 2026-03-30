@@ -45,6 +45,30 @@ h1 {
   gap: 10px;
 }
 
+#choose-data {
+  display: flex;
+  align-items: flex-start;
+  flex-direction: row;
+  gap: 6px;
+}
+
+#choose-data .data-actions {
+  display: flex;
+  gap: 8px;
+}
+
+#choose-data .data-actions button {
+  font-size: 12px;
+  padding: 3px 8px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  background: #fff;
+  cursor: pointer;
+}
+
+#choose-data .data-actions button:hover {
+  background: #f0f0f0;
+}
 /* ─── Map Panel ────────────────────────────────────────────── */
 #map-panel {
   display: flex;
