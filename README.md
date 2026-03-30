@@ -1,6 +1,19 @@
+# Project 2 Documentation: Who You Gonna Call? 3-1-1!
+
+## 1. Motivation
+
+The primary purpose of this application is to assist city officials, city planners, and citizens of Cincinnati in analyzing and visualizing pothole-related 311 service requests. Potholes are a common and highly visible urban issue that affects daily commuters and vehicle maintenance overhead. Providing a dedicated, interactive dashboard for pothole data , with some extra service types, serves two distinct motivations:
+- **For Citizens:** To provide transparency on how quickly and effectively the city responds to infrastructure complaints in their direct neighborhoods compared to others.
+- **For City Planners/Officials:** To identify spatial hotspots of degraded road infrastructure, allocate resource prioritization dynamically, and detect seasonal or periodic trends, where service requests spike. By exploring the data interactively, stakeholders can easily pivot between analyzing neighborhood distribution to focusing directly on agency load.
+
+## 2. The Data
+
+This application visualizes the **Cincinnati 311 (Non-Emergency) Service Requests** dataset. 
+* **Data Source:** [Cincinnati Open Data Portal](https://data.cincinnati-oh.gov/efficient-service-delivery/Cincinnati-311-Non-Emergency-Service-Requests/gcej-gmiw/about_data)
+* **Dataset Scope:** We specifically filtered the dataset to visualize mainly "Pothole" related service requests (`SR_TYPE` containing 'PTHOLE' or 'POTHPARK') from the year 2022 to maintain high relevancy and app performance, as well as some additional service types. It includes rich attributes such as geolocation, response days, priority, requesting method, responsible agency, and neighborhood.
+
 # Interactive Map with Leaflet
 
-<!-- Instructions to Run Preprocessing Script -->
 
 ## Preprocessing Script
 
