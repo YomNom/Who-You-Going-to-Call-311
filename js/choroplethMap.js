@@ -9,6 +9,7 @@ class ChoroplethMap {
   initVis() {
     const vis = this;
 
+    vis._selectedNeighborhood = null;
     vis.map = L.map(vis.config.parentElement);
 
     L.tileLayer(
@@ -61,7 +62,36 @@ class ChoroplethMap {
           },
           mouseout: (e) => {
             vis.geoLayer.resetStyle(e.target);
+            // Re-apply selection styles after reset
+            if (vis._selectedNeighborhood) {
+              const n = e.target.feature.properties.name?.trim().toUpperCase();
+              if (n === vis._selectedNeighborhood) {
+                e.target.setStyle({ weight: 3, color: "#222", fillOpacity: 0.95 });
+              } else {
+                e.target.setStyle({ fillOpacity: 0.2 });
+              }
+            }
             vis.tooltip.style("opacity", 0);
+          },
+          click: (e) => {
+            const clickedName = name?.trim().toUpperCase();
+            const isSelected = vis._selectedNeighborhood === clickedName;
+
+            vis.geoLayer.eachLayer((l) => vis.geoLayer.resetStyle(l));
+
+            if (isSelected) {
+              vis._selectedNeighborhood = null;
+              if (window.onDashboardFilter) window.onDashboardFilter(null, null);
+            } else {
+              vis._selectedNeighborhood = clickedName;
+              e.target.setStyle({ weight: 3, color: "#222", fillOpacity: 0.95 });
+              vis.geoLayer.eachLayer((l) => {
+                if (l !== e.target) l.setStyle({ fillOpacity: 0.2 });
+              });
+              vis._selfTriggered = true;
+              if (window.onDashboardFilter) window.onDashboardFilter("NEIGHBORHOOD", name?.trim());
+              vis._selfTriggered = false;
+            }
           },
         });
       },
@@ -70,6 +100,32 @@ class ChoroplethMap {
     vis.map.fitBounds(vis.geoLayer.getBounds());
 
     vis.addLegend(maxCount);
+  }
+
+  filterData(rawRecords) {
+    const vis = this;
+    if (!vis._selfTriggered) {
+      vis._selectedNeighborhood = null;
+    }
+    vis.counts = d3.rollup(
+      rawRecords,
+      (v) => v.length,
+      (d) => (d.NEIGHBORHOOD ?? "").trim().toUpperCase(),
+    );
+    const maxCount = d3.max([...vis.counts.values()]) || 1;
+    vis.colorScale.domain([0, maxCount]);
+    vis.geoLayer.eachLayer((layer) => {
+      const n = layer.feature.properties.name?.trim().toUpperCase();
+      const isSelected = vis._selectedNeighborhood === n;
+      const count = vis.counts.get(n) ?? 0;
+      layer.setStyle({
+        fillColor: vis.colorScale(count),
+        fillOpacity: vis._selectedNeighborhood ? (isSelected ? 0.95 : 0.2) : 0.75,
+        weight: isSelected ? 3 : 1.5,
+        color: isSelected ? "#222" : "#555",
+        opacity: 1,
+      });
+    });
   }
 
   addLegend(maxCount) {
