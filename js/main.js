@@ -42,9 +42,6 @@ window.onDashboardFilter = function (field, value) {
   if (barchartChart) barchartChart.filterData(filtered);
   if (donutChart) donutChart.filterData(filtered);
   if (timelineChart) timelineChart.filterData(filtered);
-  // On full reset (field === null), reset word cloud to show all bulky data
-  if (field === null && wordCloudChart)
-    wordCloudChart.filterData(_fullPotholeData);
 };
 
 // Load all data
@@ -199,30 +196,6 @@ Promise.all([
       potholeData.length,
     );
 
-    wordCloudChart.onWordClick = function (term) {
-      const fields = [
-        "BULKY_ITEM_1",
-        "BULKY_ITEM_2",
-        "BULKY_ITEM_3",
-        "BULKY_ITEM_4",
-        "BULKY_ITEM_5",
-      ];
-      const synth = {
-        TIRES: (d) => d.NUM_TIRES > 0,
-        "FREON/AC UNIT": (d) => d.NUM_FREONS > 0,
-        "SOFA BED": (d) => d.NUM_SOFABEDS > 0,
-      };
-      if (term === null) {
-        leafletMap.filterData(_fullBulkyData);
-      } else {
-        const fn =
-          synth[term] ||
-          ((d) =>
-            fields.some((f) => (d[f] || "").trim().toUpperCase() === term));
-        leafletMap.filterData(_fullBulkyData.filter(fn));
-      }
-    };
-
     // --- Timeline chart ---
     timelineChart = new TimelineChart(
       { parentElement: "timeline-chart" },
@@ -234,7 +207,6 @@ Promise.all([
         if (lollipopChart) lollipopChart.filterData(filteredRecords);
         if (barchartChart) barchartChart.filterData(filteredRecords);
         if (donutChart) donutChart.filterData(filteredRecords);
-        if (wordCloudChart) wordCloudChart.filterData(filteredRecords);
       },
     );
   })
