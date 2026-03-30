@@ -135,7 +135,52 @@ body {
   font-size: 11px;
   color: #888;
 }
+/* ─── Data Selection ─────────────────────────────────────────────────── */
+#choose-data {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  font-size: 12px;
+  gap: 6px;
+}
 
+#choose-data .data-options {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+#choose-data .data-options label {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+#choose-data .data-options input[type="checkbox"] {
+  cursor: pointer;
+  margin: 0;
+}
+
+#choose-data .data-actions {
+  display: flex;
+  gap: 8px;
+}
+
+#choose-data .data-actions button {
+  font-size: 12px;
+  padding: 3px 8px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  background: #fff;
+  cursor: pointer;
+}
+
+#choose-data .data-actions button:hover {
+  background: #f0f0f0;
+}
 /* ─── Card ─────────────────────────────────────────────────── */
 .card {
   background: #fff;

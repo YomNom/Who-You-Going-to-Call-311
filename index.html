@@ -54,6 +54,22 @@
         </div>
     </header>
 
+    <div id="choose-data">
+        <p><strong>Selected data:</strong></p>
+        <div class="data-options">
+            <label><input type="checkbox" name="data-select" value="PTHOLE">Pothole(s)</label>
+            <label><input type="checkbox" name="data-select" value="LITR-PRV">Littering</label>
+            <label><input type="checkbox" name="data-select" value="TREEPR">Dead Tree(s) on Private Property</label>
+            <label><input type="checkbox" name="data-select" value="DAPUB1">Dead Animal(s)</label>
+            <label><input type="checkbox" name="data-select" value="DUMP-PVS">Dumping(s)</label>
+        </div>
+        <div class="data-actions">
+            <button id="select-all-data" type="button">Select All</button>
+            <button id="clear-data-selection" type="button">Clear Selection</button>
+        </div>
+    </div>
+        
+
     <div id="maps-row">
         <div class="card" id="point-map-card">
             <div class="card-label">Find potholes near you</div>
