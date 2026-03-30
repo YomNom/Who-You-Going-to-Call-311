@@ -28,9 +28,9 @@ function initPotholeMap(potholeData) {
     leafletMap.setColorBy(this.value);
   });
 
-  // Basemap toggle handler
-  d3.select('#toggle-basemap').on('click', function () {
-    leafletMap.toggleBasemap();
+  // Basemap select handler
+  d3.select('#basemap-select').on('change', function () {
+    leafletMap.setBasemap(this.value);
   });
 
   // Heatmap toggle handler

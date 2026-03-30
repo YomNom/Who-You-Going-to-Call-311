@@ -5,7 +5,7 @@ class LeafletMap {
     this.allData = allData;
 
     this.colorBy = 'priority';
-    this.basemapIdx = 0;
+    this.activeBasemap = null;
     this._currentMapped = mappedData;
     this._viewMode = 'points'; // 'points' | 'heatmap'
 
@@ -18,18 +18,35 @@ class LeafletMap {
     const elId = vis.config.parentElement.replace(/^#/, '');
     vis.map = L.map(elId, { minZoom: 10, maxZoom: 18 });
 
-    vis.basemaps = [
-      L.tileLayer(
+    vis.basemaps = {
+      'Esri Topo': L.tileLayer(
         'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
-        { attribution: 'Tiles © Esri' }
+        { attribution: 'Tiles &copy; Esri' }
       ),
-      L.tileLayer(
+      'Esri Imagery': L.tileLayer(
         'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-        { attribution: 'Tiles © Esri Imagery' }
-      )
-    ];
+        { attribution: 'Tiles &copy; Esri — Source: Esri, Maxar, Earthstar Geographics' }
+      ),
+      'OpenStreetMap': L.tileLayer(
+        'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+        { attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' }
+      ),
+      'CartoDB Positron': L.tileLayer(
+        'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+        { attribution: '&copy; <a href="https://carto.com/">CARTO</a>', subdomains: 'abcd' }
+      ),
+      'CartoDB Dark': L.tileLayer(
+        'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+        { attribution: '&copy; <a href="https://carto.com/">CARTO</a>', subdomains: 'abcd' }
+      ),
+      'Esri Streets': L.tileLayer(
+        'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+        { attribution: 'Tiles &copy; Esri' }
+      ),
+    };
 
-    vis.basemaps[0].addTo(vis.map);
+    vis.activeBasemap = 'Esri Topo';
+    vis.basemaps[vis.activeBasemap].addTo(vis.map);
 
     vis.tooltip = d3.select('#tooltip');
     vis.markersLayer = L.layerGroup().addTo(vis.map);
@@ -171,11 +188,12 @@ class LeafletMap {
     }
   }
 
-  toggleBasemap() {
+  setBasemap(name) {
     const vis = this;
-    vis.basemaps[vis.basemapIdx].remove();
-    vis.basemapIdx = (vis.basemapIdx + 1) % vis.basemaps.length;
-    vis.basemaps[vis.basemapIdx].addTo(vis.map);
+    if (!vis.basemaps[name] || name === vis.activeBasemap) return;
+    vis.basemaps[vis.activeBasemap].remove();
+    vis.activeBasemap = name;
+    vis.basemaps[name].addTo(vis.map);
   }
 
   filterData(rawRecords) {
