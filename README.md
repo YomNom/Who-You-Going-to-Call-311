@@ -2,7 +2,9 @@
 
 There's data portal by Cincinnati, Ohio where you can access a variety of data about the city (all data here: https://data.cincinnati-oh.gov/.). This includes non-emergency service requests for incidents such as graffiti, bike rack damage, and littering. This project utilizes that data to create an interactive dashboard displaying the data analytics for non-emergency service requests, specifically littering, dumping, dead trees, dead animals, and potholes. The dashboard is a web browser that was made using D3.js - "a popular, open-source JavaScript library used to create custom, interactive data visualizations in web browsers". Ultimately the purpose of this dashboard is to study and provide insight on the data surrounding the incidents that were focused on. 
 
-**How to Run:** 
+PUT DEMO VIDEO HERE
+
+## **How to Run:** 
   >1. Clone the repository.
   >2. Launch a local web server in the root directory (e.g., `python -m http.server 8000`).
   >3. Navigate to `http://localhost:8000` via web browser.
@@ -94,7 +96,7 @@ DELETETHISExplain each view of the data, the GUI, etc.  Explain how you can inte
 
 ## 6. Libraries & Other Tools
 
-* **Libraries & Tools Used:** D3.js (v6) for data aggregation and chart rendering, Leaflet.js for mapping, Leaflet.heat for heatmap generation, d3-cloud for the Word Cloud, and standard HTML/CSS/JS for DOM manipulation.
+D3.js (v6) for data aggregation and chart rendering, Leaflet.js for mapping, Leaflet.heat for heatmap generation, d3-cloud for the Word Cloud, and standard HTML/CSS/JS for DOM manipulation.
 
 ## 7. Code Structure
 
