@@ -4,7 +4,7 @@ There's data portal by Cincinnati, Ohio where you can access a variety of data a
 
 PUT DEMO VIDEO HERE
 
-## **How to Run:** 
+### **How to Run** 
   >1. Clone the repository.
   >2. Launch a local web server in the root directory (e.g., `python -m http.server 8000`).
   >3. Navigate to `http://localhost:8000` via web browser.
