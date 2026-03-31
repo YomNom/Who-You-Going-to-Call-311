@@ -1,27 +1,36 @@
-# Project 2 Documentation: Who You Gonna Call? 3-1-1!
+# [Who You Gonna Call? 3-1-1!](https://who-you-going-to-call-311-tras.vercel.app/)
 
-## 1. Motivation
+There's data portal by Cincinnati, Ohio where you can access a variety of data about the city (all data here: https://data.cincinnati-oh.gov/.). This includes non-emergency service requests for incidents such as graffiti, bike rack damage, and littering. This project utilizes that data to create an interactive dashboard displaying the data analytics for non-emergency service requests, specifically littering, dumping, dead trees, dead animals, and potholes. The dashboard is a web browser that was made using D3.js - "a popular, open-source JavaScript library used to create custom, interactive data visualizations in web browsers". Ultimately the purpose of this dashboard is to study and provide insight on the data surrounding the incidents that were focused on. 
 
-The primary purpose of this application is to assist city officials, city planners, and citizens of Cincinnati in analyzing and visualizing a wide array of 311 service requests. While initially focused solely on potholes, the dashboard has been significantly expanded to cover several major urban quality-of-life categories including Littering, Dead Trees on Private Property, Dead Animals, and Illegal Dumping. 
-
-Providing a dedicated, interactive dashboard serves two distinct motivations:
-- **For Citizens:** To provide transparency on how quickly and effectively the city responds to infrastructure and sanitation complaints in their direct neighborhoods compared to others, and to visualize exactly what types of issues plague their streets.
-
-- **For City Officials & Planners:** To identify spatial hotspots of degraded road infrastructure, track illegal dumping contents, allocate resource prioritization dynamically, and detect seasonal or periodic trends (like post-winter freeze-thaw cycles for potholes or shifting waste patterns). By exploring the data interactively through multiple map views and filtering via KPIs, stakeholders can easily pivot between analyzing neighborhood distribution to focusing directly on agency load.
+**How to Run:** 
+  >1. Clone the repository.
+  >2. Launch a local web server in the root directory (e.g., `python -m http.server 8000`).
+  >3. Navigate to `http://localhost:8000` via web browser.
 
 ## 2. The Data
+The data used was exported from the **Cincinnati 311 (Non-Emergency) Service Requests** dataset ([Cincinnati Open Data Portal](https://data.cincinnati-oh.gov/efficient-service-delivery/Cincinnati-311-Non-Emergency-Service-Requests/gcej-gmiw/about_data)). There are 70 columns and 152816 rows. It is 81.6 mb. Due to it's large size we had to narrow the scope of our data to one year and focused only on five service request types: littering, dumping, dead trees, dead animals, and potholes.
 
-This application visualizes the **Cincinnati 311 (Non-Emergency) Service Requests** dataset. 
-* **Data Source:** [Cincinnati Open Data Portal](https://data.cincinnati-oh.gov/efficient-service-delivery/Cincinnati-311-Non-Emergency-Service-Requests/gcej-gmiw/about_data)
+We also only focused on 9 of the 70 columns: 
+1. SR_TYPE (Potholes (`PTHOLE`, `POTHPARK`), Littering (`LITR-PRV`), Dead Trees (`TREEPR`), Dead Animals (`DAPUB1`), and Dumping (`DUMP-PVS`))
+2. PRIORITY (STANDARD, PRIORITY, HAZARDOUS, EMERGENCY)
+3. DEPT_NAME 
+4. METHOD_RECEIVED
+5. NEIGHBORHOOD 
+6. TIME_RECEIVED 
+7. DATE_CREATED 
+8. PLANNED_COMPLETION_DAYS 
+9. DATE_CLOSED
 
-* **Dataset Scope:** We processed and cleaned the massive 2022 dataset to focus on five key, high-impact `SR_TYPE` categories: Potholes (`PTHOLE`, `POTHPARK`), Littering (`LITR-PRV`), Dead Trees (`TREEPR`), Dead Animals (`DAPUB1`), and Dumping (`DUMP-PVS`). The dataset features rich attributes including geolocation, response days, priority, requesting method, responsible agency, neighborhood, and textual descriptions of bulky items dumped.
+## 3. Sketch
+Diseregarding all the interactions for the maps, we have 7 different kinds of graphs that we needed to layout: leaflet, chloropleth, timeline, lollipop graph, donut chart, word cloud, and a bar chart. The following is our sketch on the initial design/layout for our dashboard:
 
-## 3. Sketches & Initial Design
+<img width="768" height="764" alt="image" src="https://github.com/user-attachments/assets/49a1808f-1e89-4c25-8769-e491884427e4" />
 
-**Timeline Design Explanation:** 
-When deciding how to design the timeline, we opted for an area/line chart approach. We aggregated the data by **Day** to provide high granularity of requests. A line/area chart was selected over bar charts because it inherently emphasizes the continuous nature of time, making peaks and "valleys" (like weekend dips or weather-related spikes) much easier to identify seamlessly.
+In the end the timeline was switched with row two and heatmap was added as an option to view in the leaflet map.
 
-## 4. Visualization Components & Justification of Choices
+## 4. Visualization Components
+
+DELETETHISExplain each view of the data, the GUI, etc.  Explain how you can interact with your application, and how the views update in response to these interactions.  Please include screenshots to illustrate, and relate these screenshots to the text.
 
 ### Global Controls & KPIs
 - **Header Filters:** Users can instantly swap the thematic color encoding, change Map Tile basemaps (e.g., Esri Topo, CartoDB Dark) for contrast, and toggle heatmaps.
@@ -47,7 +56,7 @@ When deciding how to design the timeline, we opted for an area/line chart approa
 - **Illegal Dumping Profiler (Word Cloud):** Parses description texts of bulky items thrown away on the streets. Font size correlates to the frequency of the word mentioned. **Why?** Unstructured textual data (like descriptions of dumped garbage) is nominal. Mapping the frequency to size in a compact area allows users to immediately grasp the most common culprits (e.g., "mattress", "couch", "tire").
 - **Interactions:** All of these charts are mutually linked. Clicking a specific Priority, Method, or Department filters the dataset and updates the rest of the application dashboard.
 
-### Specific Color Scheme Justifications
+### 4.1 Specific Color Scheme Justifications
 
 1. **Priority Field:** 
    - **Type:** Ordinal Data
@@ -83,16 +92,13 @@ When deciding how to design the timeline, we opted for an area/line chart approa
   * **Image:** `[Insert screenshot of the map colored by Response Time, zoomed into dark red areas with the Donut chart showing departments]`
   * **Finding:** When coloring the map by Response Time, utilizing the green-to-red diverging scale reveals direct localized pockets (deep reds) where it takes the city substantially longer to close tickets. Clicking specific departments in the Donut Chart reveals that the Public Services department handles a vastly different response timeline curve than the Transportation & Engineering department.
 
-## 6. Process
+## 6. Libraries & Other Tools
 
 * **Libraries & Tools Used:** D3.js (v6) for data aggregation and chart rendering, Leaflet.js for mapping, Leaflet.heat for heatmap generation, d3-cloud for the Word Cloud, and standard HTML/CSS/JS for DOM manipulation.
 
-* **Code Structure:** Built in a heavily modular fashion. `index.html` stores the layout framework spanning flex and grid components. `main.js` orchestrates cross-component interactions (KPI updating, multi-way brushing), while dedicated class files (`timelineChart.js`, `leafletMap.js`, `wordCloud.js`, etc.) individually manage standard D3 update patterns.
-* **How to Run:** 
-  1. Clone the repository.
-  2. Launch a local web server in the root directory (e.g., `python -m http.server 8000`).
-  3. Navigate to `http://localhost:8000` via web browser.
-* **Access Link:** `[https://who-you-going-to-call-311-tras.vercel.app/]`
+## 7. Code Structure
+
+Built in a heavily modular fashion. `index.html` stores the layout framework spanning flex and grid components. `main.js` orchestrates cross-component interactions (KPI updating, multi-way brushing), while dedicated class files (`timelineChart.js`, `leafletMap.js`, `wordCloud.js`, etc.) individually manage standard D3 update patterns.
 
 ## 7. Challenges and Future Work
 
@@ -102,7 +108,7 @@ When deciding how to design the timeline, we opted for an area/line chart approa
 
 ## 8. Use of AI and Collaboration
 
-* We utilized AI Assistants (Gemini inside VSCode) to help write this documents base on the constraints from the Project Requirement and the feedback that 1 of the team member got from Project 1
+AI(Gemini inside VSCode) was used by Quoc Huynh (kiq2908) to set up outline of the documentation. Github Copilot was utilized for debugging. 
 
 ## 9. Who Did What 
 
