@@ -3,10 +3,12 @@ class LeafletMap {
     this.config = config;
     this.mappedData = mappedData;
     this.allData = allData;
+    this._allMapped = allData.filter(d => d.hasCoords);
 
-    this.colorBy = 'priority';
+    this.colorBy = 'service';
     this.activeBasemap = null;
-    this._currentMapped = mappedData;
+    this._filteredMapped = mappedData;
+    this._currentMapped = this._allMapped;
     this._viewMode = 'points'; // 'points' | 'heatmap'
 
     this.initVis();
@@ -80,6 +82,25 @@ class LeafletMap {
       'EMERGENCY': '#d62828',
     };
 
+    const serviceTypes = Array.from(
+      new Set(
+        vis.allData
+          .map(d => (d.SR_TYPE || '').trim())
+          .filter(Boolean)
+      )
+    ).sort((a, b) => a.localeCompare(b));
+
+    const servicePalette = {
+      'DAPUB1': '#cfc313',
+      'LITR-PRV': '#ff7f0e',
+      'PTHOLE': '#3f688f',
+      'POTHPARK': '#002bb9',
+      'TREEPR': '#098d04',
+      'DUMP-PVS': '#9467bd'
+    };
+
+    vis.serviceScale = d3.scaleOrdinal().domain(serviceTypes).range(serviceTypes.map(type => servicePalette[type] || '#0059ac'));
+    vis.servicePaletteColors = { ...servicePalette };
     vis.neighborhoodScale = d3.scaleOrdinal(d3.schemeTableau10);
     vis.agencyScale = d3.scaleOrdinal(d3.schemeSet2);
 
@@ -99,7 +120,7 @@ class LeafletMap {
       ]);
     }
 
-    vis.renderPoints(vis.mappedData);
+    vis.renderPoints(vis._currentMapped);
     vis.addLegend();
   }
 
@@ -107,6 +128,9 @@ class LeafletMap {
     const vis = this;
 
     switch (vis.colorBy) {
+      case 'service':
+        const serviceType = (d.SR_TYPE || '').trim();
+        return vis.servicePaletteColors[serviceType] || '#0059ac';
       case 'priority':
         return vis.priorityColors[(d.PRIORITY || '').toUpperCase()] || '#aaa';
 
@@ -180,11 +204,14 @@ class LeafletMap {
     });
   }
 
-  setColorBy(value) {
+  setColorBy(value) { // value should match one of the cases in getColor()
     this.colorBy = value;
+    this._currentMapped = value === 'service' ? this._allMapped : this._filteredMapped; // Always show all points when coloring by service type (categorical)
     if (this._viewMode === 'points') {
       this.renderPoints(this._currentMapped);
       this.addLegend();
+    } else {
+      this.renderHeatmap(this._currentMapped);
     }
   }
 
@@ -198,7 +225,8 @@ class LeafletMap {
 
   filterData(rawRecords) {
     const vis = this;
-    vis._currentMapped = rawRecords.filter(d => d.hasCoords);
+    vis._filteredMapped = rawRecords.filter(d => d.hasCoords);
+    vis._currentMapped = vis.colorBy === 'service' ? vis._allMapped : vis._filteredMapped; // Always show all points when coloring by service type (categorical)
     if (vis._viewMode === 'heatmap') {
       vis.renderHeatmap(vis._currentMapped);
     } else {
@@ -465,6 +493,21 @@ class LeafletMap {
     }
   }
 
+  _openServiceColorPicker(serviceType, colorBox) {
+    const vis = this;
+    const input = document.createElement('input');
+    input.type = 'color';
+    input.value = vis.servicePaletteColors[serviceType];
+    
+    input.onchange = () => {
+      vis.servicePaletteColors[serviceType] = input.value;
+      colorBox.style.background = input.value;
+      vis.renderPoints(vis._currentMapped);
+    };
+    
+    input.click();
+  }
+
   addLegend() {
     const vis = this;
 
@@ -480,6 +523,31 @@ class LeafletMap {
         Object.entries(vis.priorityColors).forEach(([k, v]) => {
           const label = k.charAt(0) + k.slice(1).toLowerCase();
           div.innerHTML += `<i style="background:${v}"></i>${label}<br>`;
+        });
+
+      } else if (vis.colorBy === 'service') {
+        div.innerHTML = '<strong>Service Type (Click on color to change)</strong><br>';
+        div.style.cursor = 'pointer';
+        vis.serviceScale.domain().forEach(service => {
+          const colorSwatch = document.createElement('div');
+          colorSwatch.onmouseover = () => { colorSwatch.style.backgroundColor = 'rgba(0,0,0,0.05)'; };
+          colorSwatch.onmouseout = () => { colorSwatch.style.backgroundColor = 'transparent'; };
+          
+          const colorBox = document.createElement('i');
+          colorBox.style.background = vis.servicePaletteColors[service] || '#0059ac';
+          
+          const label = document.createElement('span');
+          label.textContent = service;
+          
+          colorSwatch.appendChild(colorBox);
+          colorSwatch.appendChild(label);
+          
+          colorSwatch.onclick = (e) => {
+            e.stopPropagation();
+            vis._openServiceColorPicker(service, colorBox);
+          };
+          
+          div.appendChild(colorSwatch);
         });
 
       } else if (vis.colorBy === 'response_time') {

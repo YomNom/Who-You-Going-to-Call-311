@@ -134,7 +134,7 @@ class ChoroplethMap {
     legend.onAdd = () => {
       const div = L.DomUtil.create("div", "legend");
       const steps = 5;
-      div.innerHTML = "<strong>Pothole Requests</strong><br>";
+      div.innerHTML = "<strong>Number of Requests</strong><br>";
       for (let i = steps; i >= 0; i--) {
         const value = Math.round((i / steps) * maxCount);
         div.innerHTML += `<i style="background:${vis.colorScale(value)}"></i> ${value}<br>`;

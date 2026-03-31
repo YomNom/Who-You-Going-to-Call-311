@@ -23,6 +23,10 @@ function initPotholeMap(potholeData) {
     potholeData
   );
 
+  // Set default color by and basemap
+  d3.select('#color-select').property('value', 'service');
+  leafletMap.setColorBy('service');
+
   // Color-by dropdown handler
   d3.select('#color-select').on('change', function () {
     leafletMap.setColorBy(this.value);

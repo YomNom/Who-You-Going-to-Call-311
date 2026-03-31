@@ -5,10 +5,10 @@ let leafletMap,
   donutChart,
   timelineChart,
   wordCloudChart;
-let _fullPotholeData = [];
-let _fullBulkyData = [];
+let _displayedData = [];
+let _fullBulkyData = []; // for word cloud
 
-function updateKPIs(records) {
+function updateKPIs(records) { 
   const total = records.length;
   const withResponse = records.filter(
     (d) => !isNaN(d.RESPONSE_TIME_DAYS) && d.RESPONSE_TIME_DAYS >= 0,
@@ -30,8 +30,8 @@ function updateKPIs(records) {
 window.onDashboardFilter = function (field, value) {
   const filtered =
     field === null
-      ? _fullPotholeData
-      : _fullPotholeData.filter(
+      ? _displayedData
+      : _displayedData.filter(
           (d) => (d[field] ?? "").trim().toUpperCase() === value.toUpperCase(),
         );
 
@@ -50,26 +50,44 @@ Promise.all([
   d3.json("data/cincinnati.geojson"),
 ])
   .then(([data, geojson]) => {
-    console.log("Data loaded:", { data, geojson });
-    const potholeTypes = new Set(["PTHOLE", "POTHPARK"]);
-    const potholeData = data.filter((d) => potholeTypes.has(d.SR_TYPE));
 
-    potholeData.forEach((d) => {
-      d.LATITUDE = +d.LATITUDE;
-      d.LONGITUDE = +d.LONGITUDE;
-      d.RESPONSE_TIME_DAYS = +d.RESPONSE_TIME_DAYS;
-      d.hasCoords =
-        !isNaN(d.LATITUDE) &&
-        !isNaN(d.LONGITUDE) &&
-        d.LATITUDE !== 0 &&
-        d.LONGITUDE !== 0;
-    });
+    // ------------- Checkboxes ------------ //
+    // Make sure all data options are selected by default.
+    const checkboxes = Array.from(document.querySelectorAll('input[name="data-select"]'));
+    checkboxes.forEach(cb => cb.checked = true);
 
-    _fullPotholeData = potholeData;
-    updateKPIs(potholeData);
+    // Re-render when any data checkbox changes
+    checkboxes.forEach(cb => cb.addEventListener('change', () => renderGraphs(data, geojson)));
 
-    // --- Bulky item data (separate from potholes, same CSV) ---
-    const bulkyData = data.filter((d) => {
+    const selectAllButton = document.querySelector('#select-all-data');
+    const clearSelectionButton = document.querySelector('#clear-data-selection');
+
+    if (selectAllButton) {
+      selectAllButton.addEventListener('click', () => {
+        checkboxes.forEach(cb => cb.checked = true);
+        renderGraphs(data, geojson);
+      });
+    }
+
+    if (clearSelectionButton) {
+      clearSelectionButton.addEventListener('click', () => {
+        checkboxes.forEach(cb => cb.checked = false);
+        renderGraphs(data, geojson);
+      });
+    }
+    /* ----------------------------------- */
+    renderGraphs(data, geojson);
+  })
+  .catch((err) => console.error("Dashboard failed to load:", err));
+
+function renderGraphs(rawData, geojson) {
+  clearWindow();
+  const selectedTypes = getSelectedTypes();
+  _displayedData = getData(rawData, selectedTypes);
+  updateKPIs(_displayedData);
+
+  // --- Bulky item data (separate from potholes, same CSV) ---
+    const bulkyData = rawData.filter((d) => {
       const hasItem = [
         "BULKY_ITEM_1",
         "BULKY_ITEM_2",
@@ -96,12 +114,12 @@ Promise.all([
     _fullBulkyData = bulkyData;
 
     // --- Leaflet point map ---
-    const { leafletMap: lMap } = initPotholeMap(potholeData);
+    const { leafletMap: lMap } = initPotholeMap(_displayedData);
     leafletMap = lMap;
 
     // Wire up map brush to update all other charts
     leafletMap.onBrushSelection = function (selectedRecords) {
-      const records = selectedRecords || _fullPotholeData;
+      const records = selectedRecords || _displayedData;
       updateKPIs(records);
       if (choroplethMap) choroplethMap.filterData(records);
       if (lollipopChart) lollipopChart.filterData(records);
@@ -112,7 +130,7 @@ Promise.all([
 
     // --- Choropleth map ---
     const counts = d3.rollup(
-      potholeData,
+      _displayedData,
       (v) => v.length,
       (d) => (d.NEIGHBORHOOD ?? "").trim().toUpperCase(),
     );
@@ -125,7 +143,7 @@ Promise.all([
 
     // --- Lollipop chart ---
     const methodCounts = d3.rollup(
-      potholeData,
+      _displayedData,
       (v) => v.length,
       (d) => d.METHOD_RECEIVED,
     );
@@ -146,7 +164,7 @@ Promise.all([
     );
 
     const priorityCounts = d3.rollup(
-      potholeData,
+      _displayedData,
       (v) => v.length,
       (d) => {
         const raw = (d.PRIORITY ?? "").trim();
@@ -171,7 +189,7 @@ Promise.all([
 
     // --- Department donut ---
     const deptCounts = d3.rollup(
-      potholeData,
+      _displayedData,
       (v) => v.length,
       (d) => (d.DEPT_NAME ?? "").trim(),
     );
@@ -193,13 +211,13 @@ Promise.all([
     wordCloudChart = new WordCloud(
       { parentElement: "word-cloud-chart" },
       _fullBulkyData,
-      potholeData.length,
+      _displayedData.length,
     );
 
     // --- Timeline chart ---
     timelineChart = new TimelineChart(
       { parentElement: "timeline-chart" },
-      potholeData,
+      _displayedData,
       function (filteredRecords) {
         updateKPIs(filteredRecords);
         if (leafletMap) leafletMap.filterData(filteredRecords);
@@ -209,5 +227,53 @@ Promise.all([
         if (donutChart) donutChart.filterData(filteredRecords);
       },
     );
-  })
-  .catch((err) => console.error("Dashboard failed to load:", err));
+}
+
+  // dataCategory is an array of SR_TYPE
+function getData(originalData, dataCategory) {
+  const dataType = new Set(dataCategory);
+  const data = originalData.filter(d => dataType.has(d.SR_TYPE));
+
+  data.forEach(d => {
+    d.LATITUDE  = +d.LATITUDE;
+    d.LONGITUDE = +d.LONGITUDE;
+    d.RESPONSE_TIME_DAYS = +d.RESPONSE_TIME_DAYS;
+    d.hasCoords = !isNaN(d.LATITUDE) && !isNaN(d.LONGITUDE)
+                  && d.LATITUDE !== 0 && d.LONGITUDE !== 0;
+  });
+  return data;
+}
+
+// for handling special case where multiple SR_TYPE apply to an incident
+function getSelectedTypes() {
+  const selected = Array.from(document.querySelectorAll('input[name="data-select"]:checked'))
+    .map(cb => cb.value);
+
+  if (!selected.length) {
+    return [];
+  }
+
+  // PTHOLE maps to two SR_TYPE values.
+  if (selected.includes('PTHOLE')) selected.push('POTHPARK');
+
+  return Array.from(new Set(selected));
+}
+
+function clearWindow() {
+  if (leafletMap?.map) leafletMap.map.remove();
+  if (choroplethMap?.map) choroplethMap.map.remove();
+
+  d3.select('#lollipop-chart').selectAll('*').remove();
+  d3.select('#barchart-priority').selectAll('*').remove();
+  d3.select('#donut-chart').selectAll('*').remove();
+  d3.select('#neighborhood-chart').selectAll('*').remove();
+  d3.select('#timeline-chart').selectAll('*').remove();
+
+  leafletMap = null;
+  choroplethMap = null;
+  lollipopChart = null;
+  barchartChart = null;
+  donutChart = null;
+  neighborhoodDonut = null;
+  timelineChart = null;
+}

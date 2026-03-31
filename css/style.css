@@ -26,7 +26,7 @@ body {
   padding: 8px 12px;
   gap: 8px;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  background: #f0ece6;
+  background: #edf5ff;
   overflow: hidden;
 }
 
@@ -334,6 +334,20 @@ body {
   height: 12px;
   border: 1px solid #ccc;
   border-radius: 2px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 4px;
+  padding: 2px 4px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.legend-item:hover {
+  background-color: rgba(0, 0, 0, 0.05);
 }
 
 /* ─── Word Cloud ───────────────────────────────────────────── */
