@@ -75,6 +75,8 @@ DELETETHISExplain each view of the data, the GUI, etc.  Explain how you can inte
    - **Scheme Used:** Categorical Palette (`d3.schemeTableau10` and `d3.schemeSet2`).
    - **Why?** There is no numeric value or inherent order between different service types, neighborhoods or agencies. A qualitative scheme with highly distinct, contrasting colors was used so viewers can differentiate categories without implicitly assigning more weight to one over another.
 
+The default colors for the service types were chosen to be distinct and bright to be able to easily spot each service in the clusters. Green for tree dumping for the general green foliage of trees. Blue for the potholes for wanting it to be standardly addressed. The color for the trash services were simply chosen because they stood out of the chosen colors and to be unappetizing.
+
 ## 5. Discoveries
 
 *(Add screenshots for each discovery here)*
@@ -114,57 +116,9 @@ AI(Gemini inside VSCode) was used by Quoc Huynh (kiq2908) to set up outline of t
 
 ## 9. Who Did What 
 
-* **[Quoc Huynh]:** Handled data pre-processing using Python to filter out only 2022 dataset and in charge of the Heatmap.
+* **[Quoc Huynh] kiq2908:** Handled data pre-processing using Python to filter out only 2022 dataset and in charge of the Heatmap.
 * **[Tyler Brunelle]:** .
 * **[Dylan]:** .
-* **[Ziyou]:** .
+* **[Joey Yong] YomNom:** Handled viewing data and the control panel for the different service types. This includes the checkbox data selection and custom legend color selection. She also took care of the bar chart showing the priority of the displayed services. 
 * **[Kaleab Alemu]:** The MVP.
 
-## 10. Demo Video
-
-**Link to Demo:** `[Insert Youtube link here]`
-
-<!--
-# Interactive Map with Leaflet
-
-
-## Preprocessing Script
-
-The preprocessing script filters the raw Cincinnati 311 dataset down to 2022 records, calculates response times, and removes rows with missing location data.
-
-### Prerequisites
-
-Create and activate a virtual environment, then install the required dependency:
-
-```bash
-python3 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install pandas
-```
-
-### Input
-
-Place the raw CSV file at:
-
-```
-data/Cincinnati_311_(Non-Emergency)_Service_Requests_20260309.csv
-```
-
-### Run
-
-From the project root, run:
-
-```bash
-python preprocess_data.py
-```
-
-### Output
-
-The cleaned dataset is saved to:
-
-```
-data/cincinnati_311_2022_cleaned.csv
-```
-
-It includes only 2022 records with complete neighborhood and coordinate data, plus a computed `RESPONSE_TIME_DAYS` column.
--->
