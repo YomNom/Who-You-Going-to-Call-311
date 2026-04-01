@@ -112,13 +112,13 @@ Built in a heavily modular fashion. `index.html` stores the layout framework spa
 
 ## 8. Use of AI and Collaboration
 
-AI(Gemini inside VSCode) was used by Quoc Huynh (kiq2908) to set up outline of the documentation. Github Copilot was utilized for debugging. 
+AI(Gemini inside VSCode) was used by Quoc Huynh (kiq2908) to set up outline of the documentation. Github Copilot was utilized for debugging. Claude Code was used by Dylan for boilerplate generation and debugging.
 
 ## 9. Who Did What 
 
 * **[Quoc Huynh] kiq2908:** Handled data pre-processing using Python to filter out only 2022 dataset and in charge of the Heatmap.
 * **[Tyler Brunelle]:** .
-* **[Dylan]:** .
+* **[Dylan]:** Handled the part 1: the map and its interactions, and part 5, the brushing of the map and visualization updates.
 * **[Joey Yong] YomNom:** Handled viewing data and the control panel for the different service types. This includes the checkbox data selection and custom legend color selection. She also took care of the bar chart showing the priority of the displayed services. 
 * **[Kaleab Alemu]:** The MVP.
 
