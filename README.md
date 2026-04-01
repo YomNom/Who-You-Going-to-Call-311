@@ -96,9 +96,9 @@ _(Add screenshots for each discovery here)_
   - **Image:** `[Insert screenshot highlighting the clustered peak on the Timeline chart around February/March with ONLY "Potholes" checked]`
   - **Finding:** By filtering only by Potholes and observing the timeline over the early months of the year, we notice a massive spike in requests. This aligns geographically with winter weather and the freeze-thaw cycles that severely damage road integrity.
 
-- **Discovery 2: The Anatomy of Illegal Dumping:**
-  - **Image:** `[Insert screenshot highlighting the Word Cloud with only "Dumping(s)" checked]`
-  - **Finding:** Filtering by Dumping and observing the Word Cloud instantly reveals that furniture and auto-parts are the primary issue. Words like "Mattress", "Tire", and "Couch" dominate the visualization, indicating that the city should potentially focus sanitation efforts on bulk-item pickup allowances for residents.
+- **Discovery 2: The Anatomy of Trash Profile Vis:**
+  ![Word Cloud](images/Word-Cloud.png)
+  - **Finding:** Observing the Word Cloud instantly reveals that furniture and auto-parts are the primary issue. Words like "Mattress", "Tire", and "Couch" dominate the visualization, indicating that the city should potentially focus sanitation efforts on bulk-item pickup allowances for residents.
 
 - **Discovery 3: Slow Response Hotspots & Department Loads:**
   - **Image:** `[Insert screenshot of the map colored by Response Time, zoomed into dark red areas with the Donut chart showing departments]`
