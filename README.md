@@ -146,7 +146,7 @@ AI(Gemini inside VSCode) was used by Quoc Huynh (kiq2908) to set up outline of t
 ## 9. Who Did What 
 
 * **[Quoc Huynh] kiq2908:** Handled data pre-processing using Python to filter out only 2022 dataset and in charge of the Heatmap.
-* **[Tyler Brunelle]:** .
+* **[Tyler Brunelle]:** Worked on the timeline (lvl2) and merging all graphs into one dashboard and linking interactions/filters (lvl4).
 * **[Dylan]:** Handled the part 1: the map and its interactions, and part 5, the brushing of the map and visualization updates.
 * **[Joey Yong] YomNom:** Handled viewing data and the control panel for the different service types. This includes the checkbox data selection and custom legend color selection. She also took care of the bar chart showing the priority of the displayed services. 
 * **[Kaleab Alemu]:** The MVP.
