@@ -102,7 +102,36 @@ D3.js (v6) for data aggregation and chart rendering, Leaflet.js for mapping, Lea
 
 ## 7. Code Structure
 
-Built in a heavily modular fashion. `index.html` stores the layout framework spanning flex and grid components. `main.js` orchestrates cross-component interactions (KPI updating, multi-way brushing), while dedicated class files (`timelineChart.js`, `leafletMap.js`, `wordCloud.js`, etc.) individually manage standard D3 update patterns.
+We kept things modular by having each chart have its own file so everyone was able to work on their levels independently without much conflict. Here's how the project is laid out:
+
+```
+├── index.html                 # Main page layout (flex/grid)
+├── preprocess_data.py         # Python script we used to clean and filter the raw data
+├── requirements.txt           # Python dependencies
+├── css/
+│   ├── style.css              # All the dashboard styling
+│   └── leaflet.css            # Styles for the Leaflet map
+├── js/
+│   ├── main.js                # Loads data, wires up brushing & KPI updates
+│   ├── leafletMap.js          # Point map with brushing and color toggles
+│   ├── choroplethMap.js       # Neighborhood choropleth (request counts by area)
+│   ├── potholeMap.js          # Pothole-specific map view
+│   ├── timelineChart.js       # Brushable timeline area chart
+│   ├── barchartPriority.js    # Priority bar chart
+│   ├── lollipopChart.js       # Method-received lollipop chart
+│   ├── donutChart.js          # Department breakdown donut chart
+│   ├── wordCloud.js           # Word cloud for illegal dumping descriptions
+│   ├── d3.v6.min.js           # D3.js v6 library
+│   ├── d3.layout.cloud.js     # D3 word cloud layout plugin
+│   ├── leaflet.js             # Leaflet.js library
+│   └── leaflet-heat.js        # Leaflet heatmap plugin
+├── data/
+│   ├── cincinnati_311_2022_cleaned.csv  # Cleaned 311 data for 2022
+│   └── cincinnati.geojson               # Cincinnati neighborhood boundaries
+└── images/                    # Map marker and layer icons
+```
+
+Each visualization lives in its own class file and follows the standard D3 update pattern (enter, update, exit). `main.js` ties everything by handling data loading, filtering by the checkboxes, and making sure that when you brush on one chart, all the others update accordingly.
 
 ## 7. Challenges and Future Work
 
@@ -112,13 +141,13 @@ Built in a heavily modular fashion. `index.html` stores the layout framework spa
 
 ## 8. Use of AI and Collaboration
 
-AI(Gemini inside VSCode) was used by Quoc Huynh (kiq2908) to set up outline of the documentation. Github Copilot was utilized for debugging. 
+AI(Gemini inside VSCode) was used by Quoc Huynh (kiq2908) to set up outline of the documentation. Github Copilot was utilized for debugging. Claude Code was used by Dylan for boilerplate generation and debugging.
 
 ## 9. Who Did What 
 
 * **[Quoc Huynh] kiq2908:** Handled data pre-processing using Python to filter out only 2022 dataset and in charge of the Heatmap.
 * **[Tyler Brunelle]:** .
-* **[Dylan]:** .
+* **[Dylan]:** Handled the part 1: the map and its interactions, and part 5, the brushing of the map and visualization updates.
 * **[Joey Yong] YomNom:** Handled viewing data and the control panel for the different service types. This includes the checkbox data selection and custom legend color selection. She also took care of the bar chart showing the priority of the displayed services. 
 * **[Kaleab Alemu]:** The MVP.
 
