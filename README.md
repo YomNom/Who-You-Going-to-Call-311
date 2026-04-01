@@ -38,7 +38,6 @@ In the end the timeline was switched with row two and heatmap was added as an op
 
 ## 4. Visualization Components
 
-DELETETHISExplain each view of the data, the GUI, etc. Explain how you can interact with your application, and how the views update in response to these interactions. Please include screenshots to illustrate, and relate these screenshots to the text.
 Our dashboard utilizes eight different graphs/maps to display our sourced data: leaflet map, chloropleth, timeline/line chart, heatmap, lollipop, bar chart, and a word cloud. Users can interact and make changes to focus or filter the data they are looking at using the global controls and KPIs. All the visuals are linked with each other and will change according to what is being highlighted. The video below demonstrates a bit of that.
 
 https://github.com/user-attachments/assets/536ae59d-028d-4617-8263-41da4e2e7321 
