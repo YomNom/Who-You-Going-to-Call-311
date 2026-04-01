@@ -2,7 +2,9 @@
 
 There's data portal by Cincinnati, Ohio where you can access a variety of data about the city (all data here: https://data.cincinnati-oh.gov/.). This includes non-emergency service requests for incidents such as graffiti, bike rack damage, and littering. This project utilizes that data to create an interactive dashboard displaying the data analytics for non-emergency service requests, specifically littering, dumping, dead trees, dead animals, and potholes. The dashboard is a web browser that was made using D3.js - "a popular, open-source JavaScript library used to create custom, interactive data visualizations in web browsers". Ultimately the purpose of this dashboard is to study and provide insight on the data surrounding the incidents that were focused on.
 
-DEMO VIDEO: https://youtu.be/x6kx6qiMONI
+### DEMO https://youtu.be/x6kx6qiMONI
+
+https://github.com/user-attachments/assets/49a378fb-8c2a-43f7-8422-d94b19de1035
 
 ### **How to Run**
 
